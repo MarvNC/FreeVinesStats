@@ -6,8 +6,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip, 
-  ResponsiveContainer, 
-  Cell 
+  ResponsiveContainer
 } from 'recharts';
 import { ChartDataPoint, Timeframe, Granularity } from '../types';
 import SegmentedControl, { Option } from './SegmentedControl';
@@ -66,9 +65,16 @@ const PulseChart: React.FC<PulseChartProps> = ({
           <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1 uppercase tracking-wider">
              {point.fullDate} PST
           </p>
-          <p className="text-sm font-extrabold text-primary">
-            {payload[0].value.toLocaleString()} <span className="text-slate-400 font-normal">items</span>
+          <p className="text-sm font-extrabold text-primary mb-1">
+            {point.total.toLocaleString()} <span className="text-slate-400 font-normal">items</span>
           </p>
+          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-300 flex items-center gap-2">
+            <span className="inline-block size-2 rounded-full" style={{ backgroundColor: '#f97316' }} />
+            {point.lastChance.toLocaleString()} AFA
+            <span className="mx-1">•</span>
+            <span className="inline-block size-2 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
+            {point.encore.toLocaleString()} Encore
+          </div>
         </div>
       );
     }
@@ -120,15 +126,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
               tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 600}} 
             />
             <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(59, 130, 246, 0.05)'}} />
-            <Bar dataKey="total" radius={[8, 8, 8, 8]} minPointSize={2}>
-              {visibleData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={index % 2 === 0 ? '#3b82f6' : '#93c5fd'} 
-                  className="hover:fill-primary-dark transition-colors duration-200"
-                />
-              ))}
-            </Bar>
+            <Bar dataKey="lastChance" stackId="stack1" radius={[0, 0, 8, 8]} minPointSize={2} fill="#f97316" />
+            <Bar dataKey="encore" stackId="stack1" radius={[8, 8, 0, 0]} minPointSize={2} fill="#3b82f6" />
           </BarChart>
         </ResponsiveContainer>
       </div>

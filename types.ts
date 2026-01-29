@@ -31,6 +31,8 @@ export type Granularity = '5m' | '1h' | '1d';
 
 export interface ChartDataPoint {
   date: number;
+  encore: number;
+  lastChance: number;
   total: number;
   label: string; // Formatted date for axis
   fullDate: string; // YYYY-MM-DD for tooltip

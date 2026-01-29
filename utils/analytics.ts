@@ -102,7 +102,7 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
   const minTime = sortedHistory[0].t;
   const maxTime = Math.max(dayjs().valueOf(), sortedHistory[sortedHistory.length - 1].t);
   
-  const dataMap: Record<string, number> = {};
+  const dataMap: Record<string, { encore: number; lastChance: number }> = {};
   
   // Helper to generate key based on granularity in PST
   const getKey = (ts: number): string => {
@@ -119,7 +119,11 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
 
   sortedHistory.forEach(h => {
     const key = getKey(h.t);
-    dataMap[key] = (dataMap[key] || 0) + (h.encore + h.last_chance);
+    const existing = dataMap[key] || { encore: 0, lastChance: 0 };
+    dataMap[key] = {
+      encore: existing.encore + h.encore,
+      lastChance: existing.lastChance + h.last_chance
+    };
   });
 
   const results: ChartDataPoint[] = [];
@@ -156,9 +160,13 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
       fullDate = key;
     }
 
+    const encore = dataMap[key]?.encore || 0;
+    const lastChance = dataMap[key]?.lastChance || 0;
     results.push({
       date: cursor.valueOf(),
-      total: dataMap[key] || 0,
+      encore,
+      lastChance,
+      total: encore + lastChance,
       label,
       fullDate
     });
