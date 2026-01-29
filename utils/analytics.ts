@@ -196,6 +196,71 @@ export const getPstMidnightTimestamps = (startTs: number, endTs: number): number
   return midnights;
 };
 
+export const getPstWeekStartTimestamps = (startTs: number, endTs: number): number[] => {
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return [];
+  const start = Math.min(startTs, endTs);
+  const end = Math.max(startTs, endTs);
+  const segments = buildOffsetSegments(start - WEEK_MS, end + WEEK_MS);
+  const startOffset = getOffsetAt(start, segments);
+  const endOffset = getOffsetAt(end, segments);
+  const startLocal = start + startOffset;
+  const endLocal = end + endOffset;
+  const weekStarts: number[] = [];
+
+  const getWeekStartLocal = (localTs: number): number => {
+    const d = new Date(localTs);
+    const dayOfWeek = d.getUTCDay();
+    const dayIndex = (dayOfWeek + 6) % 7;
+    const hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
+    const seconds = d.getUTCSeconds();
+    const ms = d.getUTCMilliseconds();
+    const dayStartLocal = localTs - (((hours * 60 + minutes) * 60 + seconds) * 1000 + ms);
+    return dayStartLocal - dayIndex * DAY_MS;
+  };
+
+  let cursorLocal = getWeekStartLocal(startLocal);
+  while (cursorLocal <= endLocal) {
+    const utcWeekStart = getUtcForLocal(cursorLocal, segments);
+    if (utcWeekStart >= start && utcWeekStart <= end) {
+      weekStarts.push(utcWeekStart);
+    }
+    cursorLocal += WEEK_MS;
+  }
+
+  return weekStarts;
+};
+
+export const getPstMonthStartTimestamps = (startTs: number, endTs: number): number[] => {
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return [];
+  const start = Math.min(startTs, endTs);
+  const end = Math.max(startTs, endTs);
+  const buffer = 35 * DAY_MS;
+  const segments = buildOffsetSegments(start - buffer, end + buffer);
+  const startOffset = getOffsetAt(start, segments);
+  const endOffset = getOffsetAt(end, segments);
+  const startLocal = start + startOffset;
+  const endLocal = end + endOffset;
+  const monthStarts: number[] = [];
+
+  const getMonthStartLocal = (localTs: number): number => {
+    const d = new Date(localTs);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0);
+  };
+
+  let cursorLocal = getMonthStartLocal(startLocal);
+  while (cursorLocal <= endLocal) {
+    const utcMonthStart = getUtcForLocal(cursorLocal, segments);
+    if (utcMonthStart >= start && utcMonthStart <= end) {
+      monthStarts.push(utcMonthStart);
+    }
+    const d = new Date(cursorLocal);
+    cursorLocal = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1, 0, 0, 0, 0);
+  }
+
+  return monthStarts;
+};
+
 const formatChartPoints = (raw: ChartDataPointRaw[], granularity: Granularity): ChartDataPoint[] => {
   if (raw.length === 0) return [];
 

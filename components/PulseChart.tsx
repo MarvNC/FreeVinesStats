@@ -10,7 +10,12 @@ import {
   ReferenceLine
 } from 'recharts';
 import { ChartDataPoint, Timeframe, Granularity } from '../types';
-import { formatChartTickLabel, getPstMidnightTimestamps } from '../utils/analytics';
+import {
+  formatChartTickLabel,
+  getPstMidnightTimestamps,
+  getPstMonthStartTimestamps,
+  getPstWeekStartTimestamps
+} from '../utils/analytics';
 import SegmentedControl, { Option } from './SegmentedControl';
 import useDarkMode from '../hooks/useDarkMode';
 
@@ -89,6 +94,31 @@ const PulseChart: React.FC<PulseChartProps> = ({
     return getPstMidnightTimestamps(start, end);
   }, [granularity, visibleData]);
 
+  const showWeekMarkers = granularity === '1d' && (timeframe === '1m' || timeframe === '3m' || timeframe === '1y');
+  const showMonthMarkers = granularity === '1d' && (timeframe === '3m' || timeframe === '1y');
+  const weekMarkerOpacity = timeframe === '1m' ? 0.65 : 0.3;
+  const dayMarkerStyle = {
+    strokeDasharray: '4 4',
+    strokeOpacity: 0.9,
+    strokeWidth: 1.5
+  };
+
+  const pstWeekStartLines = useMemo(() => {
+    if (!showWeekMarkers) return [];
+    if (visibleData.length === 0) return [];
+    const start = visibleData[0].date;
+    const end = visibleData[visibleData.length - 1].date;
+    return getPstWeekStartTimestamps(start, end);
+  }, [showWeekMarkers, visibleData]);
+
+  const pstMonthStartLines = useMemo(() => {
+    if (!showMonthMarkers) return [];
+    if (visibleData.length === 0) return [];
+    const start = visibleData[0].date;
+    const end = visibleData[visibleData.length - 1].date;
+    return getPstMonthStartTimestamps(start, end);
+  }, [showMonthMarkers, visibleData]);
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const point = payload[0].payload as ChartDataPoint;
@@ -163,14 +193,30 @@ const PulseChart: React.FC<PulseChartProps> = ({
               tickLine={false} 
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
             />
+            {pstWeekStartLines.map((ts) => (
+              <ReferenceLine
+                key={`pst-week-start-${ts}`}
+                x={ts}
+                stroke={axisTextColor}
+                strokeDasharray="6 6"
+                strokeOpacity={weekMarkerOpacity}
+                strokeWidth={1}
+              />
+            ))}
+            {pstMonthStartLines.map((ts) => (
+              <ReferenceLine
+                key={`pst-month-start-${ts}`}
+                x={ts}
+                stroke={axisTextColor}
+                {...dayMarkerStyle}
+              />
+            ))}
             {pstMidnightLines.map((ts) => (
               <ReferenceLine
                 key={`pst-midnight-${ts}`}
                 x={ts}
                 stroke={axisTextColor}
-                strokeDasharray="4 4"
-                strokeOpacity={0.9}
-                strokeWidth={1.5}
+                {...dayMarkerStyle}
               />
             ))}
             <Tooltip content={<CustomTooltip />} cursor={{fill: cursorFill}} />
