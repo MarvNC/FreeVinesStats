@@ -91,15 +91,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center pb-12 transition-colors duration-500">
-      <header className="w-full max-w-6xl px-6 py-8 flex flex-col items-center justify-center gap-4 text-center">
-        <div className="flex items-center justify-center gap-3">
-          <div className="size-12 bg-white text-primary border-2 border-primary/20 rounded-2xl flex items-center justify-center shadow-soft">
-            <span className="material-symbols-outlined text-2xl">monitoring</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            FreeVinesStats
-          </h1>
-        </div>
+      <header className="w-full max-w-6xl px-6 py-8 flex flex-row items-center justify-between gap-4">
         {dashboardStats.updatedAt && (
           <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
             <span className="relative flex h-2.5 w-2.5">
@@ -111,6 +103,16 @@ const App: React.FC = () => {
             </span>
           </div>
         )}
+        <div className="flex items-center justify-center gap-3">
+          <div className="size-12 bg-white text-primary border-2 border-primary/20 rounded-2xl flex items-center justify-center shadow-soft">
+            <span className="material-symbols-outlined text-2xl">monitoring</span>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            FreeVinesStats
+          </h1>
+        </div>
+        {/* Spacer for centering if needed, or just justify-between */}
+        <div className="hidden md:block w-[180px]"></div> 
       </header>
 
       <main className="w-full max-w-6xl px-6 flex flex-col gap-8">

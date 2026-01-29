@@ -45,7 +45,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
       </div>
       
       <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
-        <div className="min-w-[600px] flex flex-col gap-1 w-full">
+        <div className="flex flex-col gap-1 w-full">
             {/* Months Header */}
             <div className="grid grid-cols-[30px_repeat(24,1fr)] gap-[3px] mb-1">
                 <div className="text-[10px] text-slate-400 font-bold text-right pr-2"></div>
