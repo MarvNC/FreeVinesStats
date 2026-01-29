@@ -1,8 +1,10 @@
 
 export interface HistoryItem {
   t: number;          // Timestamp (ms)
-  encore: number;     // "AI" Items
+  ai?: number;        // "AI" Items (new field name)
+  encore?: number;    // Legacy "AI" Items
   last_chance: number;// "AFA" Items
+  zero_etv?: number;  // Zero-ETV Items
 }
 
 export interface StatsMeta {
@@ -31,8 +33,9 @@ export type Granularity = '5m' | '1h' | '1d';
 
 export interface ChartDataPoint {
   date: number;
-  encore: number;
+  ai: number;
   lastChance: number;
+  zeroEtv: number;
   total: number;
   label: string; // Formatted date for axis
   fullDate: string; // YYYY-MM-DD for tooltip

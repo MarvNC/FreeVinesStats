@@ -18,6 +18,9 @@ const calculateMedian = (values: number[]): number => {
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 };
 
+const getAiCount = (item: HistoryItem): number => item.ai ?? item.encore ?? 0;
+const getZeroEtvCount = (item: HistoryItem): number => item.zero_etv ?? 0;
+
 export const processStats = (history: HistoryItem[], updatedAtStr: string): DashboardStats => {
   if (!history.length) {
     return {
@@ -40,14 +43,14 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
   const oneHourAgo = now.subtract(1, 'hour');
   const lastHourTotal = _.sumBy(
     history.filter(h => h.t > oneHourAgo.valueOf()),
-    h => h.encore + h.last_chance
+    h => getAiCount(h) + h.last_chance
   );
 
   // 2. Today (PST)
   const todayStart = nowPst.startOf('day');
   const todayTotal = _.sumBy(
     history.filter(h => h.t >= todayStart.valueOf()),
-    h => h.encore + h.last_chance
+    h => getAiCount(h) + h.last_chance
   );
 
   // Median Daily
@@ -57,7 +60,7 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
   );
   
   const dailyTotals = Object.values(dailyGroups).map(items => 
-    _.sumBy(items, i => i.encore + i.last_chance)
+    _.sumBy(items, i => getAiCount(i) + i.last_chance)
   );
   
   const dailyMedian = Math.round(calculateMedian(dailyTotals));
@@ -67,7 +70,7 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
   const weekStart = nowPst.startOf('isoWeek');
   const thisWeekTotal = _.sumBy(
     history.filter(h => h.t >= weekStart.valueOf()),
-    h => h.encore + h.last_chance
+    h => getAiCount(h) + h.last_chance
   );
 
   // Median Weekly
@@ -77,7 +80,7 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
   );
 
   const weeklyTotals = Object.values(weeklyGroups).map(items => 
-    _.sumBy(items, i => i.encore + i.last_chance)
+    _.sumBy(items, i => getAiCount(i) + i.last_chance)
   );
 
   const weeklyMedian = Math.round(calculateMedian(weeklyTotals));
@@ -102,7 +105,7 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
   const minTime = sortedHistory[0].t;
   const maxTime = Math.max(dayjs().valueOf(), sortedHistory[sortedHistory.length - 1].t);
   
-  const dataMap: Record<string, { encore: number; lastChance: number }> = {};
+  const dataMap: Record<string, { ai: number; lastChance: number; zeroEtv: number }> = {};
   
   // Helper to generate key based on granularity in PST
   const getKey = (ts: number): string => {
@@ -119,10 +122,11 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
 
   sortedHistory.forEach(h => {
     const key = getKey(h.t);
-    const existing = dataMap[key] || { encore: 0, lastChance: 0 };
+    const existing = dataMap[key] || { ai: 0, lastChance: 0, zeroEtv: 0 };
     dataMap[key] = {
-      encore: existing.encore + h.encore,
-      lastChance: existing.lastChance + h.last_chance
+      ai: existing.ai + getAiCount(h),
+      lastChance: existing.lastChance + h.last_chance,
+      zeroEtv: existing.zeroEtv + getZeroEtvCount(h)
     };
   });
 
@@ -160,13 +164,15 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
       fullDate = key;
     }
 
-    const encore = dataMap[key]?.encore || 0;
+    const ai = dataMap[key]?.ai || 0;
     const lastChance = dataMap[key]?.lastChance || 0;
+    const zeroEtv = dataMap[key]?.zeroEtv || 0;
     results.push({
       date: cursor.valueOf(),
-      encore,
+      ai,
       lastChance,
-      total: encore + lastChance,
+      zeroEtv,
+      total: ai + lastChance,
       label,
       fullDate
     });
@@ -195,7 +201,7 @@ export const processHeatMaps = (history: HistoryItem[]): HeatMapData => {
     if (h.t < minTs) minTs = h.t;
     
     const d = dayjs(h.t).tz(TIMEZONE);
-    const total = h.encore + h.last_chance;
+    const total = getAiCount(h) + h.last_chance;
     
     // Weekly Map (Total sum for daily view)
     const dayKey = d.format('YYYY-MM-DD');

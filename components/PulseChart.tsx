@@ -69,11 +69,14 @@ const PulseChart: React.FC<PulseChartProps> = ({
             {point.total.toLocaleString()} <span className="text-slate-400 font-normal">items</span>
           </p>
           <div className="text-[11px] font-medium text-slate-500 dark:text-slate-300 flex items-center gap-2">
+            <span className="inline-block size-2 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+            {point.zeroEtv.toLocaleString()} Zero ETV
+            <span className="mx-1">•</span>
             <span className="inline-block size-2 rounded-full" style={{ backgroundColor: '#f97316' }} />
             {point.lastChance.toLocaleString()} AFA
             <span className="mx-1">•</span>
             <span className="inline-block size-2 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
-            {point.encore.toLocaleString()} Encore
+            {point.ai.toLocaleString()} AI
           </div>
         </div>
       );
@@ -126,8 +129,9 @@ const PulseChart: React.FC<PulseChartProps> = ({
               tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 600}} 
             />
             <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(59, 130, 246, 0.05)'}} />
-            <Bar dataKey="lastChance" stackId="stack1" radius={[0, 0, 8, 8]} minPointSize={2} fill="#f97316" />
-            <Bar dataKey="encore" stackId="stack1" radius={[8, 8, 0, 0]} minPointSize={2} fill="#3b82f6" />
+            <Bar dataKey="zeroEtv" stackId="stack1" radius={[0, 0, 8, 8]} minPointSize={2} fill="#ef4444" />
+            <Bar dataKey="lastChance" stackId="stack1" radius={[0, 0, 0, 0]} minPointSize={2} fill="#f97316" />
+            <Bar dataKey="ai" stackId="stack1" radius={[8, 8, 0, 0]} minPointSize={2} fill="#3b82f6" />
           </BarChart>
         </ResponsiveContainer>
       </div>
