@@ -1,6 +1,6 @@
 
 export interface HistoryItem {
-  t: number;          // Timestamp (ms)
+  t: number;          // Bucket timestamp (ms) - 15m bucket start
   ai?: number;        // "AI" Items (new field name)
   encore?: number;    // Legacy "AI" Items
   last_chance: number;// "AFA" Items
@@ -29,7 +29,7 @@ export interface DashboardStats {
 }
 
 export type Timeframe = '1d' | '7d' | '1m' | '3m' | '1y';
-export type Granularity = '5m' | '1h' | '1d';
+export type Granularity = '15m' | '1h' | '1d';
 export type DataFilter = 'all' | 'zeroEtv' | 'afa';
 
 export interface ChartDataPoint {

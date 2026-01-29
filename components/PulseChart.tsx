@@ -48,6 +48,15 @@ const PulseChart: React.FC<PulseChartProps> = ({
     }
   }, [timeframe]);
 
+  const intervalMs = useMemo(() => {
+    switch (granularity) {
+      case '15m': return 15 * 60 * 1000;
+      case '1h': return 60 * 60 * 1000;
+      case '1d': return 24 * 60 * 60 * 1000;
+      default: return 15 * 60 * 1000;
+    }
+  }, [granularity]);
+
   const visibleData = useMemo(() => {
     if (data.length === 0) return [];
     const firstTime = data[0].date;
@@ -59,10 +68,16 @@ const PulseChart: React.FC<PulseChartProps> = ({
     const minStartTime = firstTime;
     const scrollableRange = maxStartTime - minStartTime;
     const currentStartTime = minStartTime + (scrollableRange * (scrollPercentage / 100));
-    const currentEndTime = currentStartTime + windowDuration;
+    const alignToInterval = (ts: number) => {
+      if (intervalMs <= 0) return ts;
+      const offset = firstTime % intervalMs;
+      return Math.floor((ts - offset) / intervalMs) * intervalMs + offset;
+    };
+    const alignedStartTime = Math.max(minStartTime, alignToInterval(currentStartTime));
+    const currentEndTime = alignedStartTime + windowDuration;
 
-    return data.filter(d => d.date >= currentStartTime && d.date <= currentEndTime);
-  }, [data, windowDuration, scrollPercentage]);
+    return data.filter(d => d.date >= alignedStartTime && d.date <= currentEndTime);
+  }, [data, windowDuration, scrollPercentage, intervalMs]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -91,7 +106,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
     return null;
   };
 
-  const granularityOptions: Option<Granularity>[] = (['5m', '1h', '1d'] as Granularity[]).map(g => ({
+  const granularityOptions: Option<Granularity>[] = (['15m', '1h', '1d'] as Granularity[]).map(g => ({
     value: g,
     label: g,
     disabled: !validGranularities.includes(g)

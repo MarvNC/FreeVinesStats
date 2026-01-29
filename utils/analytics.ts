@@ -10,6 +10,165 @@ dayjs.extend(timezone);
 dayjs.extend(isoWeek);
 
 const TIMEZONE = 'America/Los_Angeles';
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+const WEEK_MS = 7 * DAY_MS;
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+type OffsetSegment = { start: number; end: number; offset: number };
+type ChartDataPointRaw = Omit<ChartDataPoint, 'label' | 'fullDate'>;
+
+const TZ_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: TIMEZONE,
+  hour12: false,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
+
+const getTimeZoneOffsetMs = (ts: number): number => {
+  const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(ts));
+  let year = 0;
+  let month = 0;
+  let day = 0;
+  let hour = 0;
+  let minute = 0;
+  let second = 0;
+
+  for (const part of parts) {
+    switch (part.type) {
+      case 'year':
+        year = Number(part.value);
+        break;
+      case 'month':
+        month = Number(part.value);
+        break;
+      case 'day':
+        day = Number(part.value);
+        break;
+      case 'hour':
+        hour = Number(part.value);
+        break;
+      case 'minute':
+        minute = Number(part.value);
+        break;
+      case 'second':
+        second = Number(part.value);
+        break;
+      default:
+        break;
+    }
+  }
+
+  const asUTC = Date.UTC(year, month - 1, day, hour, minute, second);
+  return asUTC - ts;
+};
+
+const findOffsetTransition = (start: number, end: number, offset: number): number => {
+  let lo = start;
+  let hi = end;
+
+  while (hi - lo > MINUTE_MS) {
+    const mid = Math.floor((lo + hi) / 2);
+    const midOffset = getTimeZoneOffsetMs(mid);
+    if (midOffset === offset) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+
+  return hi;
+};
+
+const buildOffsetSegments = (startTs: number, endTs: number): OffsetSegment[] => {
+  const start = Math.min(startTs, endTs);
+  const end = Math.max(startTs, endTs);
+  const segments: OffsetSegment[] = [];
+  let cursor = start;
+  let currentOffset = getTimeZoneOffsetMs(cursor);
+  let segmentStart = start;
+
+  while (cursor + DAY_MS <= end) {
+    const next = cursor + DAY_MS;
+    const nextOffset = getTimeZoneOffsetMs(next);
+
+    if (nextOffset !== currentOffset) {
+      const transition = findOffsetTransition(cursor, next, currentOffset);
+      segments.push({ start: segmentStart, end: transition, offset: currentOffset });
+      segmentStart = transition;
+      currentOffset = nextOffset;
+    }
+
+    cursor = next;
+  }
+
+  segments.push({ start: segmentStart, end: end + 1, offset: currentOffset });
+  return segments;
+};
+
+const getOffsetAt = (ts: number, segments: OffsetSegment[]): number => {
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (ts >= segments[i].start) {
+      return segments[i].offset;
+    }
+  }
+  return segments[0]?.offset ?? 0;
+};
+
+const getOffsetForTs = (ts: number, segments: OffsetSegment[], indexRef: { i: number }): number => {
+  while (indexRef.i < segments.length - 1 && ts >= segments[indexRef.i].end) {
+    indexRef.i += 1;
+  }
+  return segments[indexRef.i].offset;
+};
+
+const pad2 = (value: number): string => (value < 10 ? `0${value}` : `${value}`);
+
+const formatChartPoints = (raw: ChartDataPointRaw[], granularity: Granularity): ChartDataPoint[] => {
+  if (raw.length === 0) return [];
+
+  return raw.map(point => {
+    const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(point.date));
+    const partMap: Record<string, string> = {};
+
+    for (const part of parts) {
+      if (part.type !== 'literal') {
+        partMap[part.type] = part.value;
+      }
+    }
+
+    const year = partMap.year;
+    const month = partMap.month;
+    const day = partMap.day;
+    const hour = partMap.hour ?? '00';
+    const minute = partMap.minute ?? '00';
+    const monthLabel = MONTH_SHORT[Number(month) - 1] ?? month;
+
+    const fullDate = granularity === '1d'
+      ? `${year}-${month}-${day}`
+      : `${year}-${month}-${day} ${hour}:${minute}`;
+
+    let label = '';
+    if (granularity === '1d') {
+      label = `${monthLabel} ${day}`;
+    } else if (granularity === '1h') {
+      label = `${monthLabel} ${day} ${hour}:${minute}`;
+    } else {
+      label = `${hour}:${minute}`;
+    }
+
+    return {
+      ...point,
+      label,
+      fullDate
+    };
+  });
+};
 
 const calculateMedian = (values: number[]): number => {
   if (values.length === 0) return 0;
@@ -101,214 +260,232 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
 export const processChartData = (history: HistoryItem[], granularity: Granularity, filter: DataFilter = 'all'): ChartDataPoint[] => {
   if (!history.length) return [];
 
-  const sortedHistory = [...history].sort((a, b) => a.t - b.t);
-  const minTime = sortedHistory[0].t;
-  const maxTime = Math.max(dayjs().valueOf(), sortedHistory[sortedHistory.length - 1].t);
-  
-  const dataMap: Record<string, { ai: number; lastChance: number; zeroEtv: number }> = {};
-  
-  // Helper to generate key based on granularity in PST
-  const getKey = (ts: number): string => {
-    const d = dayjs(ts).tz(TIMEZONE);
-    if (granularity === '1d') return d.format('YYYY-MM-DD');
-    if (granularity === '1h') return d.format('YYYY-MM-DD HH:00');
-    if (granularity === '5m') {
-      const minute = d.minute();
-      const roundedMinute = Math.floor(minute / 5) * 5;
-      return d.format(`YYYY-MM-DD HH:${String(roundedMinute).padStart(2, '0')}`);
-    }
-    return '';
-  };
+  const endTime = Math.max(Date.now(), history[history.length - 1].t);
+  const intervalMs = granularity === '15m' ? 15 * MINUTE_MS : granularity === '1h' ? HOUR_MS : DAY_MS;
+  const results: ChartDataPointRaw[] = [];
 
-  sortedHistory.forEach(h => {
-    const key = getKey(h.t);
-    const existing = dataMap[key] || { ai: 0, lastChance: 0, zeroEtv: 0 };
-    
-    // Apply Filter Logic for Aggregation
-    let aiToAdd = getAiCount(h);
-    let lastChanceToAdd = h.last_chance;
-    let zeroEtvToAdd = getZeroEtvCount(h);
+  if (granularity === '1d') {
+    const segments = buildOffsetSegments(history[0].t - DAY_MS, endTime + DAY_MS);
+    const startOffset = getOffsetAt(history[0].t, segments);
+    const endOffset = getOffsetAt(endTime, segments);
+    const startKey = Math.floor((history[0].t + startOffset) / DAY_MS);
+    const endKey = Math.floor((endTime + endOffset) / DAY_MS);
+    const dayKeyToStart: number[] = new Array(endKey - startKey + 1);
 
-    if (filter === 'zeroEtv') {
-      aiToAdd = 0;
-      lastChanceToAdd = 0;
-    } else if (filter === 'afa') {
-      aiToAdd = 0;
-      zeroEtvToAdd = 0;
+    for (let key = startKey; key <= endKey; key++) {
+      const localMidnight = key * DAY_MS;
+      let bucketStart = localMidnight - segments[0].offset;
+
+      for (const segment of segments) {
+        const candidate = localMidnight - segment.offset;
+        if (candidate >= segment.start && candidate < segment.end) {
+          bucketStart = candidate;
+          break;
+        }
+      }
+
+      dayKeyToStart[key - startKey] = bucketStart;
     }
 
-    dataMap[key] = {
-      ai: existing.ai + aiToAdd,
-      lastChance: existing.lastChance + lastChanceToAdd,
-      zeroEtv: existing.zeroEtv + zeroEtvToAdd
-    };
-  });
+    let cursorKey = startKey;
+    let historyIndex = 0;
+    const offsetIndex = { i: 0 };
 
-  const results: ChartDataPoint[] = [];
-  
-  // Iterate from start to end to fill gaps
-  let cursor = dayjs(minTime).tz(TIMEZONE);
-  
-  // Align cursor start based on granularity
-  if (granularity === '1d') cursor = cursor.startOf('day');
-  if (granularity === '1h') cursor = cursor.startOf('hour');
-  if (granularity === '5m') {
-    const m = cursor.minute();
-    cursor = cursor.minute(Math.floor(m / 5) * 5).startOf('minute');
+    while (cursorKey <= endKey) {
+      let ai = 0;
+      let lastChance = 0;
+      let zeroEtv = 0;
+
+      while (historyIndex < history.length) {
+        const item = history[historyIndex];
+        const offset = getOffsetForTs(item.t, segments, offsetIndex);
+        const itemKey = Math.floor((item.t + offset) / DAY_MS);
+        if (itemKey !== cursorKey) break;
+
+        let aiToAdd = getAiCount(item);
+        let lastChanceToAdd = item.last_chance;
+        let zeroEtvToAdd = getZeroEtvCount(item);
+
+        if (filter === 'zeroEtv') {
+          aiToAdd = 0;
+          lastChanceToAdd = 0;
+        } else if (filter === 'afa') {
+          aiToAdd = 0;
+          zeroEtvToAdd = 0;
+        }
+
+        ai += aiToAdd;
+        lastChance += lastChanceToAdd;
+        zeroEtv += zeroEtvToAdd;
+        historyIndex += 1;
+      }
+
+      results.push({
+        date: dayKeyToStart[cursorKey - startKey],
+        ai,
+        lastChance,
+        zeroEtv,
+        total: ai + lastChance
+      });
+
+      cursorKey += 1;
+    }
+
+    return formatChartPoints(results, granularity);
   }
 
-  const end = dayjs(maxTime).tz(TIMEZONE);
+  let cursor = Math.floor(history[0].t / intervalMs) * intervalMs;
+  const endBucket = Math.floor(endTime / intervalMs) * intervalMs;
+  let historyIndex = 0;
 
-  while (cursor.isBefore(end) || cursor.isSame(end)) {
-    let key = '';
-    let label = '';
-    let fullDate = '';
+  while (cursor <= endBucket) {
+    let ai = 0;
+    let lastChance = 0;
+    let zeroEtv = 0;
+    const bucketEnd = cursor + intervalMs;
 
-    if (granularity === '1d') {
-      key = cursor.format('YYYY-MM-DD');
-      label = cursor.format('MMM DD');
-      fullDate = key;
-    } else if (granularity === '1h') {
-      key = cursor.format('YYYY-MM-DD HH:00');
-      label = cursor.format('MMM DD HH:mm');
-      fullDate = key;
-    } else {
-      key = cursor.format('YYYY-MM-DD HH:mm');
-      label = cursor.format('HH:mm');
-      fullDate = key;
+    while (historyIndex < history.length && history[historyIndex].t < bucketEnd) {
+      const item = history[historyIndex];
+
+      if (item.t >= cursor) {
+        let aiToAdd = getAiCount(item);
+        let lastChanceToAdd = item.last_chance;
+        let zeroEtvToAdd = getZeroEtvCount(item);
+
+        if (filter === 'zeroEtv') {
+          aiToAdd = 0;
+          lastChanceToAdd = 0;
+        } else if (filter === 'afa') {
+          aiToAdd = 0;
+          zeroEtvToAdd = 0;
+        }
+
+        ai += aiToAdd;
+        lastChance += lastChanceToAdd;
+        zeroEtv += zeroEtvToAdd;
+      }
+
+      historyIndex += 1;
     }
 
-    const ai = dataMap[key]?.ai || 0;
-    const lastChance = dataMap[key]?.lastChance || 0;
-    const zeroEtv = dataMap[key]?.zeroEtv || 0;
     results.push({
-      date: cursor.valueOf(),
+      date: cursor,
       ai,
       lastChance,
       zeroEtv,
-      total: ai + lastChance,
-      label,
-      fullDate
+      total: ai + lastChance
     });
 
-    if (granularity === '1d') cursor = cursor.add(1, 'day');
-    else if (granularity === '1h') cursor = cursor.add(1, 'hour');
-    else cursor = cursor.add(5, 'minute');
+    cursor += intervalMs;
   }
 
-  return results;
+  return formatChartPoints(results, granularity);
 };
 
 export const processHeatMaps = (history: HistoryItem[], filter: DataFilter = 'all'): HeatMapData => {
-  const cutoff = dayjs().subtract(1, 'year').valueOf();
-  const recentHistory = history.filter(h => h.t > cutoff);
+  const cutoff = Date.now() - 365 * DAY_MS;
+  let minTs = Number.MAX_SAFE_INTEGER;
+  let maxTs = 0;
+
+  for (const item of history) {
+    if (item.t <= cutoff) continue;
+    if (item.t < minTs) minTs = item.t;
+    if (item.t > maxTs) maxTs = item.t;
+  }
+
+  if (minTs === Number.MAX_SAFE_INTEGER) {
+    return {
+      weekly: {},
+      hourlyMedian: Array(7).fill(0).map(() => Array(24).fill(0)),
+      hourlyMean: Array(7).fill(0).map(() => Array(24).fill(0)),
+      maxDaily: 1,
+      maxHourlyMedian: 1,
+      maxHourlyMean: 1
+    };
+  }
+
+  const segments = buildOffsetSegments(minTs - DAY_MS, maxTs + DAY_MS);
+  const minOffset = getOffsetAt(minTs, segments);
+  const maxOffset = getOffsetAt(maxTs, segments);
+  const minLocal = minTs + minOffset;
+  const maxLocal = maxTs + maxOffset;
+
+  const getWeekKey = (localTs: number): number => {
+    const d = new Date(localTs);
+    const dayOfWeek = d.getUTCDay();
+    const dayIndex = (dayOfWeek + 6) % 7;
+    const hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
+    const seconds = d.getUTCSeconds();
+    const ms = d.getUTCMilliseconds();
+    const dayStartLocal = localTs - (((hours * 60 + minutes) * 60 + seconds) * 1000 + ms);
+    const weekStartLocal = dayStartLocal - dayIndex * DAY_MS;
+    return Math.floor(weekStartLocal / WEEK_MS);
+  };
+
+  const minWeekKey = getWeekKey(minLocal);
+  const maxWeekKey = getWeekKey(maxLocal);
+  const weekCount = Math.max(maxWeekKey - minWeekKey + 1, 1);
 
   const weeklyMap: Record<string, number> = {};
-  
-  // Intermediate aggregation: Key "YYYY-MM-DD HH" -> Total Drops
-  const hourlyTotalsMap: Map<string, number> = new Map();
-  
-  // Track earliest timestamp in this set to properly calculate the time window
-  let minTs = Number.MAX_SAFE_INTEGER;
+  const hourlySum: number[][] = Array(7).fill(0).map(() => Array(24).fill(0));
+  const hourlyWeekSums: number[][][] = Array(7)
+    .fill(0)
+    .map(() => Array(24).fill(0).map(() => Array(weekCount).fill(0)));
 
-  recentHistory.forEach(h => {
-    if (h.t < minTs) minTs = h.t;
-    
-    const d = dayjs(h.t).tz(TIMEZONE);
-    
+  const offsetIndex = { i: 0 };
+
+  for (const item of history) {
+    if (item.t <= cutoff) continue;
+
+    const offset = getOffsetForTs(item.t, segments, offsetIndex);
+    const localTs = item.t + offset;
+    const d = new Date(localTs);
+    const dayOfWeek = d.getUTCDay();
+    const dayIndex = (dayOfWeek + 6) % 7;
+    const hour = d.getUTCHours();
+
     let total = 0;
     if (filter === 'all') {
-      total = getAiCount(h) + h.last_chance;
+      total = getAiCount(item) + item.last_chance;
     } else if (filter === 'zeroEtv') {
-      total = getZeroEtvCount(h);
+      total = getZeroEtvCount(item);
     } else if (filter === 'afa') {
-       total = h.last_chance;
+      total = item.last_chance;
     }
-    
-    // Weekly Map (Total sum for daily view)
-    const dayKey = d.format('YYYY-MM-DD');
-    weeklyMap[dayKey] = (weeklyMap[dayKey] || 0) + total;
 
-    // Hourly Map Prep (Sum for specific date-hour)
-    const hourKey = d.format('YYYY-MM-DD HH');
-    hourlyTotalsMap.set(hourKey, (hourlyTotalsMap.get(hourKey) || 0) + total);
-  });
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth() + 1;
+    const day = d.getUTCDate();
+    const dateKey = `${year}-${pad2(month)}-${pad2(day)}`;
+    weeklyMap[dateKey] = (weeklyMap[dateKey] || 0) + total;
 
-  // Prepare samples for median/mean calculation: DayIndex -> HourIndex -> Array of Totals
-  const hourlySamples: number[][][] = Array(7).fill(0).map(() => Array(24).fill(0).map(() => []));
-  
-  for (const [key, total] of hourlyTotalsMap.entries()) {
-    // Key format: "YYYY-MM-DD HH"
-    const dateStr = key.substring(0, 10);
-    const hourStr = key.substring(11, 13);
-    const hourIndex = parseInt(hourStr, 10);
-    
-    const d = dayjs.tz(dateStr, TIMEZONE);
-    // day() returns 0 (Sun) - 6 (Sat). Convert to 0 (Mon) - 6 (Sun)
-    const dayOfWeek = d.day(); 
-    const dayIndex = (dayOfWeek + 6) % 7; 
-    
-    if (dayIndex >= 0 && dayIndex < 7 && hourIndex >= 0 && hourIndex < 24) {
-        hourlySamples[dayIndex][hourIndex].push(total);
+    const minutes = d.getUTCMinutes();
+    const seconds = d.getUTCSeconds();
+    const ms = d.getUTCMilliseconds();
+    const dayStartLocal = localTs - (((hour * 60 + minutes) * 60 + seconds) * 1000 + ms);
+    const weekStartLocal = dayStartLocal - dayIndex * DAY_MS;
+    const weekKey = Math.floor(weekStartLocal / WEEK_MS);
+    const weekIndex = weekKey - minWeekKey;
+
+    if (weekIndex >= 0 && weekIndex < weekCount) {
+      hourlyWeekSums[dayIndex][hour][weekIndex] += total;
     }
+
+    hourlySum[dayIndex][hour] += total;
   }
 
-  // Calculate Median & Mean Matrices
   const hourlyMedianMatrix: number[][] = Array(7).fill(0).map(() => Array(24).fill(0));
   const hourlyMeanMatrix: number[][] = Array(7).fill(0).map(() => Array(24).fill(0));
-  
-  // Determine how many times each weekday occurred since the oldest data point (or cutoff)
-  const now = dayjs().tz(TIMEZONE);
-  const startTs = (recentHistory.length > 0 && minTs !== Number.MAX_SAFE_INTEGER) ? minTs : cutoff;
-  
-  const start = dayjs(startTs).tz(TIMEZONE);
-  const weekdayOccurrences = Array(7).fill(0);
-  
-  let cursor = start.startOf('day');
-  const end = now.endOf('day');
-  
-  let safety = 0;
-  while(cursor.isBefore(end) && safety < 400) {
-      const dayOfWeek = cursor.day();
-      const dayIndex = (dayOfWeek + 6) % 7;
-      weekdayOccurrences[dayIndex]++;
-      cursor = cursor.add(1, 'day');
-      safety++;
-  }
 
   for (let d = 0; d < 7; d++) {
     for (let h = 0; h < 24; h++) {
-       const samples = hourlySamples[d][h];
-       const totalSlots = Math.max(weekdayOccurrences[d], 1); // Avoid div by zero
-       
-       // --- Median Calculation ---
-       // Ensure we account for days with zero drops
-       const count = Math.max(totalSlots, samples.length);
-       const zeroCount = Math.max(0, count - samples.length);
-       
-       const sortedSamples = [...samples].sort((a, b) => a - b);
-       
-       const getVal = (idx: number) => {
-         if (idx < zeroCount) return 0;
-         return sortedSamples[idx - zeroCount];
-       };
-       
-       const mid = Math.floor(count / 2);
-       let median = 0;
-       
-       if (count > 0) {
-          if (count % 2 !== 0) {
-             median = getVal(mid);
-          } else {
-             median = (getVal(mid - 1) + getVal(mid)) / 2;
-          }
-       }
-       hourlyMedianMatrix[d][h] = Math.round(median * 10) / 10;
+      const samples = hourlyWeekSums[d][h];
+      const median = calculateMedian(samples);
+      hourlyMedianMatrix[d][h] = Math.round(median * 10) / 10;
 
-       // --- Mean Calculation ---
-       const sum = samples.reduce((acc, val) => acc + val, 0);
-       const mean = sum / totalSlots;
-       hourlyMeanMatrix[d][h] = Math.round(mean * 10) / 10;
+      const mean = hourlySum[d][h] / weekCount;
+      hourlyMeanMatrix[d][h] = Math.round(mean * 10) / 10;
     }
   }
 

@@ -28,7 +28,7 @@ const App: React.FC = () => {
   // Enforce Granularity Constraints
   const validGranularities = useMemo((): Granularity[] => {
     switch (timeframe) {
-      case '1d': return ['5m', '1h'];
+      case '1d': return ['15m', '1h'];
       case '7d': return ['1h', '1d'];
       case '1m': return ['1d'];
       case '3m': return ['1d'];
