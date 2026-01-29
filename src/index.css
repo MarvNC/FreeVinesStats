@@ -1,0 +1,80 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  --heat-0: #e2e8f0;
+  /* slate-200 */
+  --heat-1: #dbeafe;
+  /* blue-100 */
+  --heat-2: #93c5fd;
+  /* blue-300 */
+  --heat-3: #3b82f6;
+  /* blue-500 */
+  --heat-4: #1d4ed8;
+  /* blue-700 */
+  --heat-5: #1e3a8a;
+  /* blue-900 */
+}
+
+.dark :root,
+.dark {
+  --heat-0: #1e293b;
+  /* slate-800 (Empty) */
+  --heat-1: #1e40af;
+  /* blue-800 */
+  --heat-2: #2563eb;
+  /* blue-600 */
+  --heat-3: #3b82f6;
+  /* blue-500 */
+  --heat-4: #60a5fa;
+  /* blue-400 */
+  --heat-5: #93c5fd;
+  /* blue-300 (Brightest) */
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.range-slider {
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  outline: none;
+}
+
+.dark .range-slider {
+  background: #334155;
+}
+
+.range-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #2b8cee;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
