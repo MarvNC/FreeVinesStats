@@ -47,9 +47,14 @@ const App: React.FC = () => {
     const loadData = async () => {
       try {
         setLoading(true);
+        const fetchLabel = '[Perf] API Fetch & Parse';
+        console.time(fetchLabel);
         const data = await fetchStats();
+        console.timeEnd(fetchLabel);
+        console.log(`[Perf] Data Size: ${data.history.length} items`);
         setRawData(data);
       } catch (err) {
+        console.timeEnd('[Perf] API Fetch & Parse');
         setError('Failed to load stats. Please check your connection.');
       } finally {
         setLoading(false);
@@ -63,17 +68,29 @@ const App: React.FC = () => {
 
   const dashboardStats: DashboardStats = useMemo(() => {
     if (!rawData) return { lastHour: 0, today: 0, todayGrowth: 0, todayMedian: 0, thisWeek: 0, weekGrowth: 0, weekMedian: 0, updatedAt: null };
-    return processStats(rawData.history, rawData.meta.updatedAt);
+    const label = '[Perf] processStats';
+    console.time(label);
+    const result = processStats(rawData.history, rawData.meta.updatedAt);
+    console.timeEnd(label);
+    return result;
   }, [rawData]);
 
   const chartData: ChartDataPoint[] = useMemo(() => {
     if (!rawData) return [];
-    return processChartData(rawData.history, granularity, dataFilter);
+    const label = '[Perf] processChartData';
+    console.time(label);
+    const result = processChartData(rawData.history, granularity, dataFilter);
+    console.timeEnd(label);
+    return result;
   }, [rawData, granularity, dataFilter]);
 
   const heatMapData: HeatMapData = useMemo(() => {
     if (!rawData) return { weekly: {}, hourlyMedian: [], hourlyMean: [], maxDaily: 1, maxHourlyMedian: 1, maxHourlyMean: 1 };
-    return processHeatMaps(rawData.history, dataFilter);
+    const label = '[Perf] processHeatMaps';
+    console.time(label);
+    const result = processHeatMaps(rawData.history, dataFilter);
+    console.timeEnd(label);
+    return result;
   }, [rawData, dataFilter]);
 
   if (loading && !rawData) {
