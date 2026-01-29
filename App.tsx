@@ -204,7 +204,7 @@ const App: React.FC = () => {
 
       <footer className="w-full max-w-6xl px-6 py-12 flex flex-col items-center justify-center gap-6 text-center text-slate-500 dark:text-slate-400">
         <a 
-          href="https://github.com/MarvNC" 
+          href="https://github.com/MarvNC/FreeVinesStats" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="flex items-center gap-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
