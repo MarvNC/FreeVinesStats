@@ -176,7 +176,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
 
       <div className="h-72 w-full mb-6">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={visibleData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <BarChart data={visibleData} margin={{ top: 10, right: 10, left: 8, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
             <XAxis 
               dataKey="date" 
@@ -187,11 +187,13 @@ const PulseChart: React.FC<PulseChartProps> = ({
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
               tickFormatter={(value) => formatChartTickLabel(Number(value), granularity)}
               minTickGap={30}
+              padding={{ left: 14, right: 8 }}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
+              width={44}
             />
             {pstWeekStartLines.map((ts) => (
               <ReferenceLine
