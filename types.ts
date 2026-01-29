@@ -30,6 +30,7 @@ export interface DashboardStats {
 
 export type Timeframe = '1d' | '7d' | '1m' | '3m' | '1y';
 export type Granularity = '5m' | '1h' | '1d';
+export type DataFilter = 'all' | 'zeroEtv' | 'afa';
 
 export interface ChartDataPoint {
   date: number;

@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { ChartDataPoint, Timeframe, Granularity } from '../types';
 import SegmentedControl, { Option } from './SegmentedControl';
+import useDarkMode from '../hooks/useDarkMode';
 
 interface PulseChartProps {
   data: ChartDataPoint[];
@@ -29,6 +30,12 @@ const PulseChart: React.FC<PulseChartProps> = ({
   validGranularities
 }) => {
   const [scrollPercentage, setScrollPercentage] = useState(100);
+  const [resolvedTheme] = useDarkMode();
+  const isDark = resolvedTheme === 'dark';
+
+  const gridColor = isDark ? '#334155' : '#e2e8f0'; // slate-700 : slate-200
+  const axisTextColor = isDark ? '#94a3b8' : '#94a3b8'; // slate-400 (keep same or adjust)
+  const cursorFill = isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.05)';
 
   const windowDuration = useMemo(() => {
     switch (timeframe) {
@@ -115,20 +122,20 @@ const PulseChart: React.FC<PulseChartProps> = ({
       <div className="h-72 w-full mb-6">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={visibleData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-700" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
             <XAxis 
               dataKey="label" 
               axisLine={false} 
               tickLine={false} 
-              tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 600}} 
+              tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
               minTickGap={30}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 600}} 
+              tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
             />
-            <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(59, 130, 246, 0.05)'}} />
+            <Tooltip content={<CustomTooltip />} cursor={{fill: cursorFill}} />
             <Bar dataKey="zeroEtv" stackId="stack1" radius={[0, 0, 8, 8]} minPointSize={2} fill="#ef4444" />
             <Bar dataKey="lastChance" stackId="stack1" radius={[0, 0, 0, 0]} minPointSize={2} fill="#f97316" />
             <Bar dataKey="ai" stackId="stack1" radius={[8, 8, 0, 0]} minPointSize={2} fill="#3b82f6" />

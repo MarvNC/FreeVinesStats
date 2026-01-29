@@ -1,4 +1,4 @@
-import { HistoryItem, DashboardStats, ChartDataPoint, HeatMapData, Granularity } from '../types';
+import { HistoryItem, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from '../types';
 import _ from 'lodash';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -98,7 +98,7 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
   };
 };
 
-export const processChartData = (history: HistoryItem[], granularity: Granularity): ChartDataPoint[] => {
+export const processChartData = (history: HistoryItem[], granularity: Granularity, filter: DataFilter = 'all'): ChartDataPoint[] => {
   if (!history.length) return [];
 
   const sortedHistory = [...history].sort((a, b) => a.t - b.t);
@@ -123,10 +123,24 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
   sortedHistory.forEach(h => {
     const key = getKey(h.t);
     const existing = dataMap[key] || { ai: 0, lastChance: 0, zeroEtv: 0 };
+    
+    // Apply Filter Logic for Aggregation
+    let aiToAdd = getAiCount(h);
+    let lastChanceToAdd = h.last_chance;
+    let zeroEtvToAdd = getZeroEtvCount(h);
+
+    if (filter === 'zeroEtv') {
+      aiToAdd = 0;
+      lastChanceToAdd = 0;
+    } else if (filter === 'afa') {
+      aiToAdd = 0;
+      zeroEtvToAdd = 0;
+    }
+
     dataMap[key] = {
-      ai: existing.ai + getAiCount(h),
-      lastChance: existing.lastChance + h.last_chance,
-      zeroEtv: existing.zeroEtv + getZeroEtvCount(h)
+      ai: existing.ai + aiToAdd,
+      lastChance: existing.lastChance + lastChanceToAdd,
+      zeroEtv: existing.zeroEtv + zeroEtvToAdd
     };
   });
 
@@ -185,7 +199,7 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
   return results;
 };
 
-export const processHeatMaps = (history: HistoryItem[]): HeatMapData => {
+export const processHeatMaps = (history: HistoryItem[], filter: DataFilter = 'all'): HeatMapData => {
   const cutoff = dayjs().subtract(1, 'year').valueOf();
   const recentHistory = history.filter(h => h.t > cutoff);
 
@@ -201,7 +215,15 @@ export const processHeatMaps = (history: HistoryItem[]): HeatMapData => {
     if (h.t < minTs) minTs = h.t;
     
     const d = dayjs(h.t).tz(TIMEZONE);
-    const total = getAiCount(h) + h.last_chance;
+    
+    let total = 0;
+    if (filter === 'all') {
+      total = getAiCount(h) + h.last_chance;
+    } else if (filter === 'zeroEtv') {
+      total = getZeroEtvCount(h);
+    } else if (filter === 'afa') {
+       total = h.last_chance;
+    }
     
     // Weekly Map (Total sum for daily view)
     const dayKey = d.format('YYYY-MM-DD');

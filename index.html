@@ -1,88 +1,122 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FreeVinesStats</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "primary": "#2b8cee",
-              "primary-dark": "#1d4ed8",
-              "background-light": "#f8fafc",
-              "background-dark": "#101922",
-              "heat-0": "#e2e8f0", // slate-200 (Empty)
-              "heat-1": "#dbeafe", // blue-100
-              "heat-2": "#93c5fd", // blue-300
-              "heat-3": "#3b82f6", // blue-500
-              "heat-4": "#1d4ed8", // blue-700
-              "heat-5": "#1e3a8a", // blue-900
-            },
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
-            boxShadow: {
-              'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-            }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreeVinesStats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2b8cee",
+            "primary-dark": "#1d4ed8",
+            "background-light": "#f8fafc",
+            "background-dark": "#101922",
+            "heat-0": "var(--heat-0)",
+            "heat-1": "var(--heat-1)",
+            "heat-2": "var(--heat-2)",
+            "heat-3": "var(--heat-3)",
+            "heat-4": "var(--heat-4)",
+            "heat-5": "var(--heat-5)",
           },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+          }
         },
-      };
-    </script>
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        -webkit-font-smoothing: antialiased;
-      }
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-      .range-slider {
-        appearance: none;
-        width: 100%;
-        height: 6px;
-        background: #e2e8f0;
-        border-radius: 4px;
-        outline: none;
-      }
-      .dark .range-slider {
-        background: #334155;
-      }
-      .range-slider::-webkit-slider-thumb {
-        appearance: none;
-        width: 16px;
-        height: 16px;
-        background: #2b8cee;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-    </style>
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --heat-0: #e2e8f0;
+      /* slate-200 */
+      --heat-1: #dbeafe;
+      /* blue-100 */
+      --heat-2: #93c5fd;
+      /* blue-300 */
+      --heat-3: #3b82f6;
+      /* blue-500 */
+      --heat-4: #1d4ed8;
+      /* blue-700 */
+      --heat-5: #1e3a8a;
+      /* blue-900 */
+    }
+
+    .dark :root,
+    .dark {
+      --heat-0: #1e293b;
+      /* slate-800 (Empty) */
+      --heat-1: #1e40af;
+      /* blue-800 */
+      --heat-2: #2563eb;
+      /* blue-600 */
+      --heat-3: #3b82f6;
+      /* blue-500 */
+      --heat-4: #60a5fa;
+      /* blue-400 */
+      --heat-5: #93c5fd;
+      /* blue-300 (Brightest) */
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .range-slider {
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .dark .range-slider {
+      background: #334155;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #2b8cee;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -100,10 +134,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
-    <div id="root"></div>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { fetchStats } from './services/api';
-import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity } from './types';
+import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -9,10 +9,12 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 // Initialize plugins locally as well to ensure availability in component render
 dayjs.extend(relativeTime);
 
+import ThemeToggle from './components/ThemeToggle';
 import StatCard from './components/StatCard';
 import PulseChart from './components/PulseChart';
 import WeeklyActivity from './components/WeeklyActivity';
 import HourlyIntensity from './components/HourlyIntensity';
+import SegmentedControl from './components/SegmentedControl';
 
 const App: React.FC = () => {
   const [rawData, setRawData] = useState<StatsData | null>(null);
@@ -21,6 +23,7 @@ const App: React.FC = () => {
   
   const [timeframe, setTimeframe] = useState<Timeframe>('1d');
   const [granularity, setGranularity] = useState<Granularity>('1h');
+  const [dataFilter, setDataFilter] = useState<DataFilter>('all');
 
   // Enforce Granularity Constraints
   const validGranularities = useMemo((): Granularity[] => {
@@ -65,13 +68,13 @@ const App: React.FC = () => {
 
   const chartData: ChartDataPoint[] = useMemo(() => {
     if (!rawData) return [];
-    return processChartData(rawData.history, granularity);
-  }, [rawData, granularity]);
+    return processChartData(rawData.history, granularity, dataFilter);
+  }, [rawData, granularity, dataFilter]);
 
   const heatMapData: HeatMapData = useMemo(() => {
     if (!rawData) return { weekly: {}, hourlyMedian: [], hourlyMean: [], maxDaily: 1, maxHourlyMedian: 1, maxHourlyMean: 1 };
-    return processHeatMaps(rawData.history);
-  }, [rawData]);
+    return processHeatMaps(rawData.history, dataFilter);
+  }, [rawData, dataFilter]);
 
   if (loading && !rawData) {
     return (
@@ -91,19 +94,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center pb-12 transition-colors duration-500">
-      <header className="w-full max-w-6xl px-6 py-8 flex flex-row items-center justify-between gap-4">
-        {dashboardStats.updatedAt && (
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-            </span>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-              Updated {dayjs(dashboardStats.updatedAt).fromNow()}
-            </span>
-          </div>
-        )}
-        <div className="flex items-center justify-center gap-3">
+      <header className="w-full max-w-6xl px-6 py-8 flex items-center justify-between text-center relative">
+        <div className="flex items-center gap-3">
           <div className="size-12 bg-white text-primary border-2 border-primary/20 rounded-2xl flex items-center justify-center shadow-soft">
             <span className="material-symbols-outlined text-2xl">monitoring</span>
           </div>
@@ -111,8 +103,21 @@ const App: React.FC = () => {
             FreeVinesStats
           </h1>
         </div>
-        {/* Spacer for centering if needed, or just justify-between */}
-        <div className="hidden md:block w-[180px]"></div> 
+
+        <div className="flex items-center gap-4">
+            {dashboardStats.updatedAt && (
+            <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
+                <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                </span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                Updated {dayjs(dashboardStats.updatedAt).fromNow()}
+                </span>
+            </div>
+            )}
+            <ThemeToggle />
+        </div>
       </header>
 
       <main className="w-full max-w-6xl px-6 flex flex-col gap-8">
@@ -143,6 +148,22 @@ const App: React.FC = () => {
             iconColorClass="text-rose-500"
           />
         </section>
+
+        <div className="flex justify-center w-full">
+            <div className="bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <SegmentedControl 
+                    options={[
+                        { value: 'all', label: 'All Items' },
+                        { value: 'zeroEtv', label: '0etv only' },
+                        { value: 'afa', label: 'AFA only' },
+                    ]}
+                    value={dataFilter}
+                    onChange={(val) => setDataFilter(val as DataFilter)}
+                    name="dataFilter"
+                    variant="flat"
+                />
+            </div>
+        </div>
 
         <PulseChart 
           data={chartData} 
