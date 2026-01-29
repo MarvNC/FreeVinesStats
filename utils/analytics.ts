@@ -131,38 +131,77 @@ const getUtcForLocal = (localTs: number, segments: OffsetSegment[]): number => {
 
 const pad2 = (value: number): string => (value < 10 ? `0${value}` : `${value}`);
 
+const buildPartMap = (ts: number): Record<string, string> => {
+  const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(ts));
+  const partMap: Record<string, string> = {};
+
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      partMap[part.type] = part.value;
+    }
+  }
+
+  return partMap;
+};
+
+const getChartLabelParts = (partMap: Record<string, string>, granularity: Granularity) => {
+  const year = partMap.year;
+  const month = partMap.month;
+  const day = partMap.day;
+  const hour = partMap.hour ?? '00';
+  const minute = partMap.minute ?? '00';
+  const monthLabel = MONTH_SHORT[Number(month) - 1] ?? month;
+
+  const fullDate = granularity === '1d'
+    ? `${year}-${month}-${day}`
+    : `${year}-${month}-${day} ${hour}:${minute}`;
+
+  let label = '';
+  if (granularity === '1d') {
+    label = `${monthLabel} ${day}`;
+  } else if (granularity === '1h') {
+    label = `${monthLabel} ${day} ${hour}:${minute}`;
+  } else {
+    label = `${hour}:${minute}`;
+  }
+
+  return { label, fullDate };
+};
+
+export const formatChartTickLabel = (ts: number, granularity: Granularity): string => {
+  if (!Number.isFinite(ts)) return '';
+  const partMap = buildPartMap(ts);
+  return getChartLabelParts(partMap, granularity).label;
+};
+
+export const getPstMidnightTimestamps = (startTs: number, endTs: number): number[] => {
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return [];
+  const start = Math.min(startTs, endTs);
+  const end = Math.max(startTs, endTs);
+  const segments = buildOffsetSegments(start - DAY_MS, end + DAY_MS);
+  const startOffset = getOffsetAt(start, segments);
+  const endOffset = getOffsetAt(end, segments);
+  const startKey = Math.floor((start + startOffset) / DAY_MS);
+  const endKey = Math.floor((end + endOffset) / DAY_MS);
+  const midnights: number[] = [];
+
+  for (let key = startKey; key <= endKey; key++) {
+    const localMidnight = key * DAY_MS;
+    const utcMidnight = getUtcForLocal(localMidnight, segments);
+    if (utcMidnight >= start && utcMidnight <= end) {
+      midnights.push(utcMidnight);
+    }
+  }
+
+  return midnights;
+};
+
 const formatChartPoints = (raw: ChartDataPointRaw[], granularity: Granularity): ChartDataPoint[] => {
   if (raw.length === 0) return [];
 
   return raw.map(point => {
-    const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(point.date));
-    const partMap: Record<string, string> = {};
-
-    for (const part of parts) {
-      if (part.type !== 'literal') {
-        partMap[part.type] = part.value;
-      }
-    }
-
-    const year = partMap.year;
-    const month = partMap.month;
-    const day = partMap.day;
-    const hour = partMap.hour ?? '00';
-    const minute = partMap.minute ?? '00';
-    const monthLabel = MONTH_SHORT[Number(month) - 1] ?? month;
-
-    const fullDate = granularity === '1d'
-      ? `${year}-${month}-${day}`
-      : `${year}-${month}-${day} ${hour}:${minute}`;
-
-    let label = '';
-    if (granularity === '1d') {
-      label = `${monthLabel} ${day}`;
-    } else if (granularity === '1h') {
-      label = `${monthLabel} ${day} ${hour}:${minute}`;
-    } else {
-      label = `${hour}:${minute}`;
-    }
+    const partMap = buildPartMap(point.date);
+    const { label, fullDate } = getChartLabelParts(partMap, granularity);
 
     return {
       ...point,

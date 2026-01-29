@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { 
+import {
   BarChart, 
   Bar, 
   XAxis, 
   YAxis,
   CartesianGrid,
   Tooltip, 
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine
 } from 'recharts';
 import { ChartDataPoint, Timeframe, Granularity } from '../types';
+import { formatChartTickLabel, getPstMidnightTimestamps } from '../utils/analytics';
 import SegmentedControl, { Option } from './SegmentedControl';
 import useDarkMode from '../hooks/useDarkMode';
 
@@ -79,6 +81,14 @@ const PulseChart: React.FC<PulseChartProps> = ({
     return data.filter(d => d.date >= alignedStartTime && d.date <= currentEndTime);
   }, [data, windowDuration, scrollPercentage, intervalMs]);
 
+  const pstMidnightLines = useMemo(() => {
+    if (granularity !== '1h' && granularity !== '15m') return [];
+    if (visibleData.length === 0) return [];
+    const start = visibleData[0].date;
+    const end = visibleData[visibleData.length - 1].date;
+    return getPstMidnightTimestamps(start, end);
+  }, [granularity, visibleData]);
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const point = payload[0].payload as ChartDataPoint;
@@ -139,10 +149,13 @@ const PulseChart: React.FC<PulseChartProps> = ({
           <BarChart data={visibleData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
             <XAxis 
-              dataKey="label" 
+              dataKey="date" 
+              type="number"
+              domain={['dataMin', 'dataMax']}
               axisLine={false} 
               tickLine={false} 
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
+              tickFormatter={(value) => formatChartTickLabel(Number(value), granularity)}
               minTickGap={30}
             />
             <YAxis 
@@ -150,6 +163,16 @@ const PulseChart: React.FC<PulseChartProps> = ({
               tickLine={false} 
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
             />
+            {pstMidnightLines.map((ts) => (
+              <ReferenceLine
+                key={`pst-midnight-${ts}`}
+                x={ts}
+                stroke={axisTextColor}
+                strokeDasharray="4 4"
+                strokeOpacity={0.9}
+                strokeWidth={1.5}
+              />
+            ))}
             <Tooltip content={<CustomTooltip />} cursor={{fill: cursorFill}} />
             <Bar dataKey="zeroEtv" stackId="stack1" radius={[0, 0, 8, 8]} minPointSize={2} fill="#ef4444" />
             <Bar dataKey="lastChance" stackId="stack1" radius={[0, 0, 0, 0]} minPointSize={2} fill="#f97316" />
