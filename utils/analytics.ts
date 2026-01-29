@@ -1,13 +1,4 @@
 import { HistoryItem, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from '../types';
-import _ from 'lodash';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-import isoWeek from 'dayjs/plugin/isoWeek';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(isoWeek);
 
 const TIMEZONE = 'America/Los_Angeles';
 const MINUTE_MS = 60 * 1000;
@@ -127,6 +118,17 @@ const getOffsetForTs = (ts: number, segments: OffsetSegment[], indexRef: { i: nu
   return segments[indexRef.i].offset;
 };
 
+const getUtcForLocal = (localTs: number, segments: OffsetSegment[]): number => {
+  for (const segment of segments) {
+    const candidate = localTs - segment.offset;
+    if (candidate >= segment.start && candidate < segment.end) {
+      return candidate;
+    }
+  }
+
+  return localTs - (segments[0]?.offset ?? 0);
+};
+
 const pad2 = (value: number): string => (value < 10 ? `0${value}` : `${value}`);
 
 const formatChartPoints = (raw: ChartDataPointRaw[], granularity: Granularity): ChartDataPoint[] => {
@@ -194,66 +196,76 @@ export const processStats = (history: HistoryItem[], updatedAtStr: string): Dash
     };
   }
 
-  const updatedAt = dayjs(updatedAtStr);
-  const now = dayjs();
-  const nowPst = now.tz(TIMEZONE);
+  const updatedAt = new Date(updatedAtStr);
+  const nowTs = Date.now();
+  const rangeStart = Math.min(history[0].t, nowTs) - WEEK_MS;
+  const rangeEnd = Math.max(history[history.length - 1].t, nowTs) + WEEK_MS;
+  const segments = buildOffsetSegments(rangeStart, rangeEnd);
+  const nowOffset = getOffsetAt(nowTs, segments);
+  const localNow = nowTs + nowOffset;
+  const getWeekStartLocal = (localTs: number): number => {
+    const d = new Date(localTs);
+    const dayOfWeek = d.getUTCDay();
+    const dayIndex = (dayOfWeek + 6) % 7;
+    const hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
+    const seconds = d.getUTCSeconds();
+    const ms = d.getUTCMilliseconds();
+    const dayStartLocal = localTs - (((hours * 60 + minutes) * 60 + seconds) * 1000 + ms);
+    return dayStartLocal - dayIndex * DAY_MS;
+  };
+  const todayKey = Math.floor(localNow / DAY_MS);
+  const currentWeekStartLocal = getWeekStartLocal(localNow);
+  const currentWeekKey = Math.floor(currentWeekStartLocal / WEEK_MS);
+  const todayStartTs = getUtcForLocal(todayKey * DAY_MS, segments);
+  const weekStartTs = getUtcForLocal(currentWeekStartLocal, segments);
+  const oneHourAgoTs = nowTs - HOUR_MS;
 
-  // 1. Last Hour
-  const oneHourAgo = now.subtract(1, 'hour');
-  const lastHourTotal = _.sumBy(
-    history.filter(h => h.t > oneHourAgo.valueOf()),
-    h => getAiCount(h) + h.last_chance
-  );
+  let lastHour = 0;
+  let today = 0;
+  let thisWeek = 0;
+  const dailyTotals: Record<number, number> = {};
+  const weeklyTotals: Record<number, number> = {};
+  const offsetIndex = { i: 0 };
 
-  // 2. Today (PST)
-  const todayStart = nowPst.startOf('day');
-  const todayTotal = _.sumBy(
-    history.filter(h => h.t >= todayStart.valueOf()),
-    h => getAiCount(h) + h.last_chance
-  );
+  for (const item of history) {
+    const t = item.t;
+    const total = getAiCount(item) + item.last_chance;
 
-  // Median Daily
-  const dailyGroups = _.groupBy(
-    history.filter(h => h.t < todayStart.valueOf()),
-    h => dayjs(h.t).tz(TIMEZONE).format('YYYY-MM-DD')
-  );
-  
-  const dailyTotals = Object.values(dailyGroups).map(items => 
-    _.sumBy(items, i => getAiCount(i) + i.last_chance)
-  );
-  
-  const dailyMedian = Math.round(calculateMedian(dailyTotals));
-  const todayGrowth = dailyMedian === 0 ? 100 : Math.round(((todayTotal - dailyMedian) / dailyMedian) * 100);
+    if (t > oneHourAgoTs) lastHour += total;
+    if (t >= todayStartTs) today += total;
+    if (t >= weekStartTs) thisWeek += total;
 
-  // 3. This Week (PST, Monday Start)
-  const weekStart = nowPst.startOf('isoWeek');
-  const thisWeekTotal = _.sumBy(
-    history.filter(h => h.t >= weekStart.valueOf()),
-    h => getAiCount(h) + h.last_chance
-  );
+    const offset = getOffsetForTs(t, segments, offsetIndex);
+    const localTs = t + offset;
+    const dayKey = Math.floor(localTs / DAY_MS);
+    const weekStartLocal = getWeekStartLocal(localTs);
+    const weekKey = Math.floor(weekStartLocal / WEEK_MS);
 
-  // Median Weekly
-  const weeklyGroups = _.groupBy(
-    history.filter(h => h.t < weekStart.valueOf()),
-    h => dayjs(h.t).tz(TIMEZONE).startOf('isoWeek').format('YYYY-MM-DD')
-  );
+    if (dayKey < todayKey) {
+      dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + total;
+    }
 
-  const weeklyTotals = Object.values(weeklyGroups).map(items => 
-    _.sumBy(items, i => getAiCount(i) + i.last_chance)
-  );
+    if (weekKey < currentWeekKey) {
+      weeklyTotals[weekKey] = (weeklyTotals[weekKey] || 0) + total;
+    }
+  }
 
-  const weeklyMedian = Math.round(calculateMedian(weeklyTotals));
-  const weekGrowth = weeklyMedian === 0 ? 100 : Math.round(((thisWeekTotal - weeklyMedian) / weeklyMedian) * 100);
+  const dailyMedian = Math.round(calculateMedian(Object.values(dailyTotals)));
+  const todayGrowth = dailyMedian === 0 ? 100 : Math.round(((today - dailyMedian) / dailyMedian) * 100);
+
+  const weeklyMedian = Math.round(calculateMedian(Object.values(weeklyTotals)));
+  const weekGrowth = weeklyMedian === 0 ? 100 : Math.round(((thisWeek - weeklyMedian) / weeklyMedian) * 100);
 
   return {
-    lastHour: lastHourTotal,
-    today: todayTotal,
+    lastHour,
+    today,
     todayGrowth,
     todayMedian: dailyMedian,
-    thisWeek: thisWeekTotal,
+    thisWeek,
     weekGrowth,
     weekMedian: weeklyMedian,
-    updatedAt: updatedAt.toDate()
+    updatedAt
   };
 };
 

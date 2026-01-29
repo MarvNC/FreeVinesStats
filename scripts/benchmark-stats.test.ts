@@ -13,8 +13,18 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isoWeek);
 
+const TIMEZONE = 'America/Los_Angeles';
 const INTERVAL_MS = 15 * 60 * 1000;
 const YEAR_INTERVALS = 365 * 24 * 4; // 15-minute buckets
+
+const calculateMedian = (values: number[]): number => {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+
+const getAiCount = (item: HistoryItem): number => item.ai ?? item.encore ?? 0;
 
 const randomInt = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -41,6 +51,83 @@ const generateMockData = (): HistoryItem[] => {
   return data;
 };
 
+const processStatsLegacy = (history: HistoryItem[], updatedAtStr: string): DashboardStats => {
+  if (!history.length) {
+    return {
+      lastHour: 0,
+      today: 0,
+      todayGrowth: 0,
+      todayMedian: 0,
+      thisWeek: 0,
+      weekGrowth: 0,
+      weekMedian: 0,
+      updatedAt: null
+    };
+  }
+
+  const updatedAt = dayjs(updatedAtStr);
+  const now = dayjs();
+  const nowPst = now.tz(TIMEZONE);
+
+  // 1. Last Hour
+  const oneHourAgo = now.subtract(1, 'hour');
+  const lastHourTotal = _.sumBy(
+    history.filter(h => h.t > oneHourAgo.valueOf()),
+    h => getAiCount(h) + h.last_chance
+  );
+
+  // 2. Today (PST)
+  const todayStart = nowPst.startOf('day');
+  const todayTotal = _.sumBy(
+    history.filter(h => h.t >= todayStart.valueOf()),
+    h => getAiCount(h) + h.last_chance
+  );
+
+  // Median Daily
+  const dailyGroups = _.groupBy(
+    history.filter(h => h.t < todayStart.valueOf()),
+    h => dayjs(h.t).tz(TIMEZONE).format('YYYY-MM-DD')
+  );
+
+  const dailyTotals = Object.values(dailyGroups).map(items =>
+    _.sumBy(items, i => getAiCount(i) + i.last_chance)
+  );
+
+  const dailyMedian = Math.round(calculateMedian(dailyTotals));
+  const todayGrowth = dailyMedian === 0 ? 100 : Math.round(((todayTotal - dailyMedian) / dailyMedian) * 100);
+
+  // 3. This Week (PST, Monday Start)
+  const weekStart = nowPst.startOf('isoWeek');
+  const thisWeekTotal = _.sumBy(
+    history.filter(h => h.t >= weekStart.valueOf()),
+    h => getAiCount(h) + h.last_chance
+  );
+
+  // Median Weekly
+  const weeklyGroups = _.groupBy(
+    history.filter(h => h.t < weekStart.valueOf()),
+    h => dayjs(h.t).tz(TIMEZONE).startOf('isoWeek').format('YYYY-MM-DD')
+  );
+
+  const weeklyTotals = Object.values(weeklyGroups).map(items =>
+    _.sumBy(items, i => getAiCount(i) + i.last_chance)
+  );
+
+  const weeklyMedian = Math.round(calculateMedian(weeklyTotals));
+  const weekGrowth = weeklyMedian === 0 ? 100 : Math.round(((thisWeekTotal - weeklyMedian) / weeklyMedian) * 100);
+
+  return {
+    lastHour: lastHourTotal,
+    today: todayTotal,
+    todayGrowth,
+    todayMedian: dailyMedian,
+    thisWeek: thisWeekTotal,
+    weekGrowth,
+    weekMedian: weeklyMedian,
+    updatedAt: updatedAt.toDate()
+  };
+};
+
 const processStatsOptimized = (history: HistoryItem[], updatedAtStr: string): DashboardStats => {
   return processStats(history, updatedAtStr);
 };
@@ -59,7 +146,7 @@ const runBenchmark = (): BenchmarkResult => {
   const updatedAtStr = new Date().toISOString();
 
   const baselineStart = performance.now();
-  const expectedResult = processStats(mockData, updatedAtStr);
+  const expectedResult = processStatsLegacy(mockData, updatedAtStr);
   const baselineEnd = performance.now();
   const baselineTime = baselineEnd - baselineStart;
 
