@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { FaGithub } from 'react-icons/fa';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -160,6 +161,24 @@ const App: React.FC = () => {
           />
         </section>
       </main>
+
+      <footer className="w-full max-w-6xl px-6 py-12 flex flex-col items-center justify-center gap-6 text-center text-slate-500 dark:text-slate-400">
+        <a 
+          href="https://github.com/MarvNC" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center gap-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+          aria-label="GitHub"
+        >
+          <FaGithub className="w-6 h-6" />
+          <span className="font-medium">By MarvNC</span>
+        </a>
+        <p className="text-sm">
+          Data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">VineHelper</a>. 
+          {' '}
+          <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">Support Vinehelper</a> if you enjoy this data.
+        </p>
+      </footer>
     </div>
   );
 };
