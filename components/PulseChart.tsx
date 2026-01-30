@@ -86,6 +86,15 @@ const PulseChart: React.FC<PulseChartProps> = ({
     return data.filter(d => d.date >= alignedStartTime && d.date <= currentEndTime);
   }, [data, windowDuration, scrollPercentage, intervalMs]);
 
+  const xDomain = useMemo(() => {
+    if (visibleData.length === 0) return ['dataMin', 'dataMax'] as const;
+    const halfStep = intervalMs / 2;
+    const timestamps = visibleData.map(point => point.date);
+    const min = Math.min(...timestamps);
+    const max = Math.max(...timestamps);
+    return [min - halfStep, max + halfStep] as [number, number];
+  }, [visibleData, intervalMs]);
+
   const pstMidnightLines = useMemo(() => {
     if (granularity !== '1h' && granularity !== '15m') return [];
     if (visibleData.length === 0) return [];
@@ -176,24 +185,25 @@ const PulseChart: React.FC<PulseChartProps> = ({
 
       <div className="h-72 w-full mb-6">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={visibleData} margin={{ top: 10, right: 10, left: 8, bottom: 0 }}>
+          <BarChart data={visibleData} margin={{ top: 10, right: 10, left: 6, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
             <XAxis 
               dataKey="date" 
               type="number"
-              domain={['dataMin', 'dataMax']}
+              domain={xDomain}
               axisLine={false} 
               tickLine={false} 
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
               tickFormatter={(value) => formatChartTickLabel(Number(value), granularity)}
               minTickGap={30}
-              padding={{ left: 14, right: 8 }}
+              padding={{ left: 6, right: 6 }}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
               tick={{fill: axisTextColor, fontSize: 10, fontWeight: 600}} 
-              width={44}
+              width={40}
+              tickMargin={6}
             />
             {pstWeekStartLines.map((ts) => (
               <ReferenceLine

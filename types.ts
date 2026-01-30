@@ -39,7 +39,7 @@ export interface ChartDataPoint {
   zeroEtv: number;
   total: number;
   label: string; // Formatted date for axis
-  fullDate: string; // YYYY-MM-DD for tooltip
+  fullDate: string; // DDD, YYYY-MM-DD [HH:mm] for tooltip
 }
 
 export interface HeatMapData {

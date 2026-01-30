@@ -13,6 +13,7 @@ type ChartDataPointRaw = Omit<ChartDataPoint, 'label' | 'fullDate'>;
 const TZ_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
   timeZone: TIMEZONE,
   hour12: false,
+  weekday: 'short',
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
@@ -145,16 +146,18 @@ const buildPartMap = (ts: number): Record<string, string> => {
 };
 
 const getChartLabelParts = (partMap: Record<string, string>, granularity: Granularity) => {
+  const weekday = partMap.weekday;
   const year = partMap.year;
   const month = partMap.month;
   const day = partMap.day;
   const hour = partMap.hour ?? '00';
   const minute = partMap.minute ?? '00';
   const monthLabel = MONTH_SHORT[Number(month) - 1] ?? month;
+  const weekdayPrefix = weekday ? `${weekday}, ` : '';
 
   const fullDate = granularity === '1d'
-    ? `${year}-${month}-${day}`
-    : `${year}-${month}-${day} ${hour}:${minute}`;
+    ? `${weekdayPrefix}${year}-${month}-${day}`
+    : `${weekdayPrefix}${year}-${month}-${day} ${hour}:${minute}`;
 
   let label = '';
   if (granularity === '1d') {
