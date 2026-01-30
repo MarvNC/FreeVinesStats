@@ -40,7 +40,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 flex flex-col w-full overflow-visible relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-baseline gap-2">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Hourly Intensity</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Hourly Intensity (Local)</h3>
             <span className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">
               ({mode === 'median' ? 'Median' : 'Mean'})
             </span>

@@ -41,7 +41,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-700 p-6 flex flex-col w-full overflow-visible relative">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Weekly Activity</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Weekly Activity (Local)</h3>
       </div>
       
       <div className="w-full overflow-x-auto pb-2 scrollbar-hide">

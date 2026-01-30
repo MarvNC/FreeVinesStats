@@ -33,8 +33,8 @@ const LOCAL_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
   second: '2-digit'
 });
 
-const getTimeZoneOffsetMs = (ts: number): number => {
-  const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(ts));
+const getTimeZoneOffsetMs = (ts: number, formatter: Intl.DateTimeFormat = TZ_PARTS_FORMATTER): number => {
+  const parts = formatter.formatToParts(new Date(ts));
   let year = 0;
   let month = 0;
   let day = 0;
@@ -71,13 +71,13 @@ const getTimeZoneOffsetMs = (ts: number): number => {
   return asUTC - ts;
 };
 
-const findOffsetTransition = (start: number, end: number, offset: number): number => {
+const findOffsetTransition = (start: number, end: number, offset: number, formatter: Intl.DateTimeFormat): number => {
   let lo = start;
   let hi = end;
 
   while (hi - lo > MINUTE_MS) {
     const mid = Math.floor((lo + hi) / 2);
-    const midOffset = getTimeZoneOffsetMs(mid);
+    const midOffset = getTimeZoneOffsetMs(mid, formatter);
     if (midOffset === offset) {
       lo = mid;
     } else {
@@ -88,20 +88,20 @@ const findOffsetTransition = (start: number, end: number, offset: number): numbe
   return hi;
 };
 
-const buildOffsetSegments = (startTs: number, endTs: number): OffsetSegment[] => {
+const buildOffsetSegments = (startTs: number, endTs: number, formatter: Intl.DateTimeFormat = TZ_PARTS_FORMATTER): OffsetSegment[] => {
   const start = Math.min(startTs, endTs);
   const end = Math.max(startTs, endTs);
   const segments: OffsetSegment[] = [];
   let cursor = start;
-  let currentOffset = getTimeZoneOffsetMs(cursor);
+  let currentOffset = getTimeZoneOffsetMs(cursor, formatter);
   let segmentStart = start;
 
   while (cursor + DAY_MS <= end) {
     const next = cursor + DAY_MS;
-    const nextOffset = getTimeZoneOffsetMs(next);
+    const nextOffset = getTimeZoneOffsetMs(next, formatter);
 
     if (nextOffset !== currentOffset) {
-      const transition = findOffsetTransition(cursor, next, currentOffset);
+      const transition = findOffsetTransition(cursor, next, currentOffset, formatter);
       segments.push({ start: segmentStart, end: transition, offset: currentOffset });
       segmentStart = transition;
       currentOffset = nextOffset;
@@ -550,7 +550,7 @@ export const processHeatMaps = (history: HistoryItem[], filter: DataFilter = 'al
     };
   }
 
-  const segments = buildOffsetSegments(minTs - DAY_MS, maxTs + DAY_MS);
+  const segments = buildOffsetSegments(minTs - DAY_MS, maxTs + DAY_MS, LOCAL_PARTS_FORMATTER);
   const minOffset = getOffsetAt(minTs, segments);
   const maxOffset = getOffsetAt(maxTs, segments);
   const minLocal = minTs + minOffset;
