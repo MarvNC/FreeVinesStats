@@ -22,6 +22,17 @@ const TZ_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
   second: '2-digit'
 });
 
+const LOCAL_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  hour12: false,
+  weekday: 'short',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
+});
+
 const getTimeZoneOffsetMs = (ts: number): number => {
   const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(ts));
   let year = 0;
@@ -145,6 +156,19 @@ const buildPartMap = (ts: number): Record<string, string> => {
   return partMap;
 };
 
+const buildLocalPartMap = (ts: number): Record<string, string> => {
+  const parts = LOCAL_PARTS_FORMATTER.formatToParts(new Date(ts));
+  const partMap: Record<string, string> = {};
+
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      partMap[part.type] = part.value;
+    }
+  }
+
+  return partMap;
+};
+
 const getChartLabelParts = (partMap: Record<string, string>, granularity: Granularity) => {
   const weekday = partMap.weekday;
   const year = partMap.year;
@@ -173,7 +197,10 @@ const getChartLabelParts = (partMap: Record<string, string>, granularity: Granul
 
 export const formatChartTickLabel = (ts: number, granularity: Granularity): string => {
   if (!Number.isFinite(ts)) return '';
-  const partMap = buildPartMap(ts);
+  // For hour/15m granularities, use local timezone; for daily, keep PST
+  const partMap = (granularity === '1h' || granularity === '15m') 
+    ? buildLocalPartMap(ts) 
+    : buildPartMap(ts);
   return getChartLabelParts(partMap, granularity).label;
 };
 

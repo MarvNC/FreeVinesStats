@@ -131,10 +131,24 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const point = payload[0].payload as ChartDataPoint;
+      // For hour/15m granularities, show local time; for daily, show PST
+      const showLocalTime = granularity === '1h' || granularity === '15m';
+      console.log('showLocalTime:', showLocalTime);
+      const dateDisplay = showLocalTime
+        ? new Date(point.date).toLocaleString('en-US', { 
+            weekday: 'short', 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          })
+        : `${point.fullDate} PST`;
       return (
         <div className="bg-white dark:bg-slate-700 p-3 rounded-xl shadow-xl border border-slate-100 dark:border-slate-600 z-50">
           <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1 uppercase tracking-wider">
-             {point.fullDate} PST
+             {dateDisplay}
           </p>
           <p className="text-sm font-extrabold text-primary mb-1">
             {point.total.toLocaleString()} <span className="text-slate-400 font-normal">items</span>
@@ -171,7 +185,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">The Pulse</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Drop volume trends over time</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Vertical lines mark midnight PST — when Amazon Vine drops launch</p>
         </div>
         
         <SegmentedControl 
