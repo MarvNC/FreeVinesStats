@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   BarChart, 
   Bar, 
@@ -12,9 +12,14 @@ import {
 import { ChartDataPoint, Timeframe, Granularity } from '../types';
 import {
   formatChartTickLabel,
+  formatMidnightLabel,
   getPstMidnightTimestamps,
   getPstMonthStartTimestamps,
-  getPstWeekStartTimestamps
+  getPstWeekStartTimestamps,
+  getCalendarWindow,
+  getLiveAnchor,
+  stepWindowAnchor,
+  formatWindowLabel,
 } from '../utils/analytics';
 import SegmentedControl, { Option } from './SegmentedControl';
 import useDarkMode from '../hooks/useDarkMode';
@@ -42,24 +47,73 @@ const PulseChart: React.FC<PulseChartProps> = ({
   onTimeframeChange,
   validGranularities
 }) => {
-  const [scrollPercentage, setScrollPercentage] = useState(100);
+  // null = live (current calendar period). A timestamp = viewing a historical period.
+  const [windowAnchor, setWindowAnchor] = useState<number | null>(null);
   const [resolvedTheme] = useDarkMode();
   const isDark = resolvedTheme === 'dark';
 
-  const gridColor    = isDark ? '#1e293b' : '#f1f5f9'; // slate-800 : slate-100
-  const axisColor    = isDark ? '#64748b' : '#94a3b8'; // slate-500 : slate-400
+  const gridColor    = isDark ? '#1e293b' : '#f1f5f9';
+  const axisColor    = isDark ? '#64748b' : '#94a3b8';
   const cursorFill   = isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.06)';
 
-  const windowDuration = useMemo(() => {
-    switch (timeframe) {
-      case '1d': return 24 * 60 * 60 * 1000;
-      case '7d': return 7  * 24 * 60 * 60 * 1000;
-      case '1m': return 30 * 24 * 60 * 60 * 1000;
-      case '3m': return 90 * 24 * 60 * 60 * 1000;
-      case '1y': return 365* 24 * 60 * 60 * 1000;
-      default:   return 24 * 60 * 60 * 1000;
-    }
+  // Snap back to live whenever the timeframe changes
+  useEffect(() => {
+    setWindowAnchor(null);
   }, [timeframe]);
+
+  // The anchor used for window calculations — live anchor when null
+  const effectiveAnchor = useMemo(() => {
+    return windowAnchor ?? getLiveAnchor(timeframe);
+  }, [windowAnchor, timeframe]);
+
+  // The [start, end) UTC window being displayed
+  const { windowStart, windowEnd } = useMemo(() => {
+    const { start, end } = getCalendarWindow(effectiveAnchor, timeframe);
+    return { windowStart: start, windowEnd: end };
+  }, [effectiveAnchor, timeframe]);
+
+  // Whether we're viewing the current live period
+  const isLive = useMemo(() => {
+    if (windowAnchor === null) return true;
+    const liveAnchor = getLiveAnchor(timeframe);
+    const { start: liveStart } = getCalendarWindow(liveAnchor, timeframe);
+    return windowStart >= liveStart;
+  }, [windowAnchor, timeframe, windowStart]);
+
+  // Earliest possible window start (one window before first data point)
+  const oldestWindowStart = useMemo(() => {
+    if (data.length === 0) return 0;
+    const { start } = getCalendarWindow(data[0].date, timeframe);
+    return start;
+  }, [data, timeframe]);
+
+  const canStepBack    = data.length > 0 && windowStart > oldestWindowStart;
+  const canStepForward = !isLive;
+
+  const stepBack = useCallback(() => {
+    const newAnchor = stepWindowAnchor(effectiveAnchor, timeframe, -1);
+    setWindowAnchor(newAnchor);
+  }, [effectiveAnchor, timeframe]);
+
+  const stepForward = useCallback(() => {
+    const newAnchor = stepWindowAnchor(effectiveAnchor, timeframe, +1);
+    const liveAnchor = getLiveAnchor(timeframe);
+    const { start: liveStart } = getCalendarWindow(liveAnchor, timeframe);
+    const { start: newStart } = getCalendarWindow(newAnchor, timeframe);
+    if (newStart >= liveStart) {
+      setWindowAnchor(null); // snap to live
+    } else {
+      setWindowAnchor(newAnchor);
+    }
+  }, [effectiveAnchor, timeframe]);
+
+  const goLive = useCallback(() => setWindowAnchor(null), []);
+
+  // Filter data to visible window
+  const visibleData = useMemo(() => {
+    if (data.length === 0) return [];
+    return data.filter(d => d.date >= windowStart && d.date < windowEnd);
+  }, [data, windowStart, windowEnd]);
 
   const intervalMs = useMemo(() => {
     switch (granularity) {
@@ -70,56 +124,43 @@ const PulseChart: React.FC<PulseChartProps> = ({
     }
   }, [granularity]);
 
-  const visibleData = useMemo(() => {
-    if (data.length === 0) return [];
-    const firstTime = data[0].date;
-    const lastTime  = data[data.length - 1].date;
-    const totalDuration = lastTime - firstTime;
-    if (totalDuration <= windowDuration) return data;
-    
-    const maxStartTime  = lastTime - windowDuration;
-    const minStartTime  = firstTime;
-    const scrollableRange = maxStartTime - minStartTime;
-    const currentStartTime = minStartTime + (scrollableRange * (scrollPercentage / 100));
-    const alignToInterval = (ts: number) => {
-      if (intervalMs <= 0) return ts;
-      const offset = firstTime % intervalMs;
-      return Math.floor((ts - offset) / intervalMs) * intervalMs + offset;
-    };
-    const alignedStartTime = Math.max(minStartTime, alignToInterval(currentStartTime));
-    const currentEndTime   = alignedStartTime + windowDuration;
-
-    return data.filter(d => d.date >= alignedStartTime && d.date <= currentEndTime);
-  }, [data, windowDuration, scrollPercentage, intervalMs]);
-
   const xDomain = useMemo(() => {
-    if (visibleData.length === 0) return ['dataMin', 'dataMax'] as const;
     const halfStep = intervalMs / 2;
-    const timestamps = visibleData.map(p => p.date);
-    const min = Math.min(...timestamps);
-    const max = Math.max(...timestamps);
-    return [min - halfStep, max + halfStep] as [number, number];
-  }, [visibleData, intervalMs]);
+    // Use the window bounds so the axis always spans the full period,
+    // even when visibleData is sparse or empty.
+    return [windowStart - halfStep, windowEnd + halfStep] as [number, number];
+  }, [windowStart, windowEnd, intervalMs]);
 
   const pstMidnightLines = useMemo(() => {
     if (granularity !== '1h' && granularity !== '15m') return [];
-    if (visibleData.length === 0) return [];
-    return getPstMidnightTimestamps(visibleData[0].date, visibleData[visibleData.length - 1].date);
-  }, [granularity, visibleData]);
+    return getPstMidnightTimestamps(windowStart, windowEnd);
+  }, [granularity, windowStart, windowEnd]);
+
+  // For sub-day granularities, label midnight lines with the day name.
+  // In 7D view show short "Mon", "Tue" etc.; in 1D view show full "Mon Mar 9".
+  const midnightLabelMode: 'none' | 'short' | 'full' = useMemo(() => {
+    if (granularity !== '1h' && granularity !== '15m') return 'none';
+    return timeframe === '1d' ? 'full' : 'short';
+  }, [granularity, timeframe]);
 
   const showWeekMarkers  = granularity === '1d' && (timeframe === '1m' || timeframe === '3m' || timeframe === '1y');
   const showMonthMarkers = granularity === '1d' && (timeframe === '3m' || timeframe === '1y');
   const weekMarkerOpacity = timeframe === '1m' ? 0.5 : 0.25;
 
   const pstWeekStartLines = useMemo(() => {
-    if (!showWeekMarkers || visibleData.length === 0) return [];
-    return getPstWeekStartTimestamps(visibleData[0].date, visibleData[visibleData.length - 1].date);
-  }, [showWeekMarkers, visibleData]);
+    if (!showWeekMarkers) return [];
+    return getPstWeekStartTimestamps(windowStart, windowEnd);
+  }, [showWeekMarkers, windowStart, windowEnd]);
 
   const pstMonthStartLines = useMemo(() => {
-    if (!showMonthMarkers || visibleData.length === 0) return [];
-    return getPstMonthStartTimestamps(visibleData[0].date, visibleData[visibleData.length - 1].date);
-  }, [showMonthMarkers, visibleData]);
+    if (!showMonthMarkers) return [];
+    return getPstMonthStartTimestamps(windowStart, windowEnd);
+  }, [showMonthMarkers, windowStart, windowEnd]);
+
+  // Date range label shown between the step arrows
+  const windowLabel = useMemo(() => {
+    return formatWindowLabel(windowStart, windowEnd, timeframe);
+  }, [windowStart, windowEnd, timeframe]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
@@ -173,7 +214,9 @@ const PulseChart: React.FC<PulseChartProps> = ({
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">The Pulse</h2>
           <p className="text-slate-400 dark:text-slate-500 text-xs font-medium mt-0.5">
-            Dashed lines mark midnight PST — when Vine drops launch
+            {granularity === '1d'
+              ? 'Daily item counts · PST calendar days'
+              : 'Dashed lines mark midnight PST — when Vine drops launch'}
           </p>
           {/* Series legend */}
           <div className="flex items-center gap-4 mt-2.5">
@@ -198,7 +241,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       {/* Chart */}
       <div className="h-64 w-full mb-5">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-          <BarChart data={visibleData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
+          <BarChart data={visibleData} margin={{ top: 16, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="0" vertical={false} stroke={gridColor} />
             <XAxis 
               dataKey="date" 
@@ -208,7 +251,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               tickLine={false} 
               tick={{ fill: axisColor, fontSize: 10, fontWeight: 500 }} 
               tickFormatter={(v) => formatChartTickLabel(Number(v), granularity)}
-              minTickGap={32}
+              minTickGap={48}
               padding={{ left: 4, right: 4 }}
             />
             <YAxis 
@@ -236,6 +279,14 @@ const PulseChart: React.FC<PulseChartProps> = ({
                 strokeDasharray="4 4"
                 strokeOpacity={0.8}
                 strokeWidth={1.5}
+                label={{
+                  value: formatMidnightLabel(ts, true),
+                  position: 'insideTopRight',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  fill: axisColor,
+                  offset: 4,
+                }}
               />
             ))}
             {pstMidnightLines.map((ts) => (
@@ -246,6 +297,14 @@ const PulseChart: React.FC<PulseChartProps> = ({
                 strokeDasharray="4 4"
                 strokeOpacity={0.7}
                 strokeWidth={1.5}
+                label={midnightLabelMode !== 'none' ? {
+                  value: formatMidnightLabel(ts, midnightLabelMode === 'full'),
+                  position: 'insideTopRight',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  fill: axisColor,
+                  offset: 4,
+                } : undefined}
               />
             ))}
             <Tooltip content={<CustomTooltip />} cursor={{ fill: cursorFill }} />
@@ -256,23 +315,57 @@ const PulseChart: React.FC<PulseChartProps> = ({
         </ResponsiveContainer>
       </div>
 
-      {/* Scroll + timeframe controls */}
-      <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-700/50 flex flex-col gap-5">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-base select-none" aria-hidden="true">history</span>
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={scrollPercentage} 
-            onChange={(e) => setScrollPercentage(parseInt(e.target.value))}
-            className="range-slider"
-            aria-label="Scroll through time range"
-            style={{ '--pct': `${scrollPercentage}%` } as React.CSSProperties}
-          />
-          <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-base select-none" aria-hidden="true">schedule</span>
+      {/* Navigation + timeframe controls */}
+      <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-700/50 flex flex-col gap-4">
+
+        {/* Step navigation row */}
+        <div className="flex items-center justify-between gap-3">
+
+          {/* Back / Forward buttons */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={stepBack}
+              disabled={!canStepBack}
+              aria-label="Previous period"
+              className="flex items-center justify-center size-8 rounded-lg bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none select-none" aria-hidden="true">chevron_left</span>
+            </button>
+            <button
+              onClick={stepForward}
+              disabled={!canStepForward}
+              aria-label="Next period"
+              className="flex items-center justify-center size-8 rounded-lg bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
+            >
+              <span className="material-symbols-outlined text-[18px] leading-none select-none" aria-hidden="true">chevron_right</span>
+            </button>
+          </div>
+
+          {/* Date range label */}
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums text-center flex-1 min-w-0 truncate">
+            {windowLabel}
+          </span>
+
+          {/* Today pill — always takes space to prevent layout shift, invisible when live */}
+          <button
+            onClick={goLive}
+            aria-label="Jump to current period"
+            aria-hidden={isLive}
+            tabIndex={isLive ? -1 : 0}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 flex-shrink-0
+              bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300
+              hover:bg-primary/20 dark:hover:bg-primary/30
+              ${isLive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          >
+            <span className="relative flex size-1.5 flex-shrink-0">
+              <span className="animate-ping absolute inline-flex size-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-primary" />
+            </span>
+            Today
+          </button>
         </div>
 
+        {/* Timeframe selector */}
         <div className="flex justify-center">
           <SegmentedControl 
             options={timeframeOptions}

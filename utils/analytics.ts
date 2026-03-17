@@ -1,4 +1,4 @@
-import { HistoryItem, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from '../types';
+import { HistoryItem, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter, Timeframe } from '../types';
 
 const TIMEZONE = 'America/Los_Angeles';
 const MINUTE_MS = 60 * 1000;
@@ -183,25 +183,51 @@ const getChartLabelParts = (partMap: Record<string, string>, granularity: Granul
     ? `${weekdayPrefix}${year}-${month}-${day}`
     : `${weekdayPrefix}${year}-${month}-${day} ${hour}:${minute}`;
 
-  let label = '';
-  if (granularity === '1d') {
-    label = `${monthLabel} ${day}`;
-  } else if (granularity === '1h') {
-    label = `${monthLabel} ${day} ${hour}:${minute}`;
-  } else {
-    label = `${hour}:${minute}`;
-  }
-
-  return { label, fullDate };
+  // label is computed per-call with showWeekday flag below
+  return { fullDate, weekday, monthLabel, day, hour, minute };
 };
 
-export const formatChartTickLabel = (ts: number, granularity: Granularity): string => {
+/**
+ * Formats a tick label for the chart X axis.
+ *
+ * showWeekday controls whether the day-of-week abbreviation is prepended:
+ *   - 1d granularity: always shown ("Mon Mar 9")
+ *   - 1h / 15m with multi-day view (7d timeframe): shown for midnight ticks only
+ *     (handled externally via ReferenceLine labels; auto-ticks show time only)
+ */
+export const formatChartTickLabel = (ts: number, granularity: Granularity, showWeekday = false): string => {
   if (!Number.isFinite(ts)) return '';
   // For hour/15m granularities, use local timezone; for daily, keep PST
-  const partMap = (granularity === '1h' || granularity === '15m') 
-    ? buildLocalPartMap(ts) 
+  const partMap = (granularity === '1h' || granularity === '15m')
+    ? buildLocalPartMap(ts)
     : buildPartMap(ts);
-  return getChartLabelParts(partMap, granularity).label;
+  const { fullDate: _fd, weekday, monthLabel, day, hour, minute } = getChartLabelParts(partMap, granularity);
+
+  if (granularity === '1d') {
+    // Always include weekday for daily bars
+    return `${weekday} ${monthLabel} ${day}`;
+  }
+  if (granularity === '1h' || granularity === '15m') {
+    if (showWeekday) {
+      // Used for midnight reference-line labels: "Mon Mar 9"
+      return `${weekday} ${monthLabel} ${Number(day)}`;
+    }
+    // Regular hour/15m ticks: just time, e.g. "06:00"
+    return `${hour}:${minute}`;
+  }
+  return `${monthLabel} ${day}`;
+};
+
+/**
+ * Formats a short weekday label for midnight reference lines.
+ * Returns e.g. "Mon" or "Mon Mar 9" depending on showDate.
+ */
+export const formatMidnightLabel = (ts: number, showDate = false): string => {
+  if (!Number.isFinite(ts)) return '';
+  const partMap = buildLocalPartMap(ts);
+  const { weekday, monthLabel, day } = getChartLabelParts(partMap, '1h');
+  if (showDate) return `${weekday} ${monthLabel} ${Number(day)}`;
+  return weekday ?? '';
 };
 
 export const getPstMidnightTimestamps = (startTs: number, endTs: number): number[] => {
@@ -296,7 +322,13 @@ const formatChartPoints = (raw: ChartDataPointRaw[], granularity: Granularity): 
 
   return raw.map(point => {
     const partMap = buildPartMap(point.date);
-    const { label, fullDate } = getChartLabelParts(partMap, granularity);
+    const { fullDate, weekday, monthLabel, day, hour, minute } = getChartLabelParts(partMap, granularity);
+    // Tooltip label stored on each data point (legacy field, still used by tooltip)
+    const label = granularity === '1d'
+      ? `${weekday} ${monthLabel} ${day}`
+      : granularity === '1h'
+        ? `${monthLabel} ${day} ${hour}:${minute}`
+        : `${hour}:${minute}`;
 
     return {
       ...point,
@@ -653,4 +685,235 @@ export const getHeatColor = (value: number, max: number): string => {
   if (ratio < 0.6) return 'bg-heat-3';
   if (ratio < 0.8) return 'bg-heat-4';
   return 'bg-heat-5';
+};
+
+// ─── Calendar-aligned window utilities (for Pulse chart step navigation) ────
+
+/**
+ * Returns the PST midnight timestamp at the start of the calendar day
+ * containing `ts` (defaults to now).
+ */
+export const getPstDayStart = (ts: number = Date.now()): number => {
+  const segments = buildOffsetSegments(ts - DAY_MS, ts + DAY_MS);
+  const offset = getOffsetAt(ts, segments);
+  const localTs = ts + offset;
+  const dayKey = Math.floor(localTs / DAY_MS);
+  return getUtcForLocal(dayKey * DAY_MS, segments);
+};
+
+/**
+ * Returns the PST Monday midnight timestamp for the week containing `ts`.
+ */
+export const getPstWeekStartFor = (ts: number = Date.now()): number => {
+  const segments = buildOffsetSegments(ts - WEEK_MS, ts + WEEK_MS);
+  const offset = getOffsetAt(ts, segments);
+  const localTs = ts + offset;
+  const d = new Date(localTs);
+  const dayOfWeek = d.getUTCDay(); // 0=Sun
+  const dayIndex = (dayOfWeek + 6) % 7; // 0=Mon
+  const hours = d.getUTCHours();
+  const minutes = d.getUTCMinutes();
+  const seconds = d.getUTCSeconds();
+  const ms = d.getUTCMilliseconds();
+  const dayStartLocal = localTs - (((hours * 60 + minutes) * 60 + seconds) * 1000 + ms);
+  const weekStartLocal = dayStartLocal - dayIndex * DAY_MS;
+  return getUtcForLocal(weekStartLocal, segments);
+};
+
+/**
+ * Returns the PST 1st-of-month midnight timestamp for the month containing `ts`.
+ */
+export const getPstMonthStartFor = (ts: number = Date.now()): number => {
+  const segments = buildOffsetSegments(ts - 35 * DAY_MS, ts + 35 * DAY_MS);
+  const offset = getOffsetAt(ts, segments);
+  const localTs = ts + offset;
+  const d = new Date(localTs);
+  const monthStartLocal = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0);
+  return getUtcForLocal(monthStartLocal, segments);
+};
+
+/**
+ * Steps a PST day-start forward or backward by `n` calendar days.
+ */
+export const stepPstDay = (dayStartTs: number, n: number): number => {
+  // Walk n days in local time, then convert back to UTC
+  const buffer = (Math.abs(n) + 2) * DAY_MS;
+  const segments = buildOffsetSegments(dayStartTs - buffer, dayStartTs + buffer);
+  const offset = getOffsetAt(dayStartTs, segments);
+  const localTs = dayStartTs + offset;
+  const newLocalTs = localTs + n * DAY_MS;
+  return getUtcForLocal(newLocalTs, segments);
+};
+
+/**
+ * Steps a PST week-start forward or backward by `n` calendar weeks.
+ */
+export const stepPstWeek = (weekStartTs: number, n: number): number => {
+  const buffer = (Math.abs(n) + 1) * WEEK_MS;
+  const segments = buildOffsetSegments(weekStartTs - buffer, weekStartTs + buffer);
+  const offset = getOffsetAt(weekStartTs, segments);
+  const localTs = weekStartTs + offset;
+  const newLocalTs = localTs + n * WEEK_MS;
+  return getUtcForLocal(newLocalTs, segments);
+};
+
+/**
+ * Steps a PST month-start forward or backward by `n` calendar months.
+ */
+export const stepPstMonth = (monthStartTs: number, n: number): number => {
+  const buffer = 35 * DAY_MS;
+  const segments = buildOffsetSegments(monthStartTs - buffer, monthStartTs + buffer + Math.abs(n) * 35 * DAY_MS);
+  const offset = getOffsetAt(monthStartTs, segments);
+  const localTs = monthStartTs + offset;
+  const d = new Date(localTs);
+  const newMonthLocal = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1, 0, 0, 0, 0);
+  return getUtcForLocal(newMonthLocal, segments);
+};
+
+export interface CalendarWindow {
+  start: number; // inclusive
+  end: number;   // exclusive (= start of next period)
+}
+
+/**
+ * Returns the [start, end) UTC timestamps for the calendar window
+ * whose period starts at `anchorTs` for the given timeframe.
+ *
+ * - 1D: one calendar day (midnight–midnight PST)
+ * - 7D: one calendar week (Mon–Mon PST)
+ * - 1M: one calendar month (1st–1st PST)
+ * - 3M: three calendar months (1st–1st PST)
+ * - 1Y: twelve calendar months (1st–1st PST, rolling from anchor month)
+ */
+export const getCalendarWindow = (anchorTs: number, timeframe: Timeframe): CalendarWindow => {
+  switch (timeframe) {
+    case '1d': {
+      const start = getPstDayStart(anchorTs);
+      const end = stepPstDay(start, 1);
+      return { start, end };
+    }
+    case '7d': {
+      const start = getPstWeekStartFor(anchorTs);
+      const end = stepPstWeek(start, 1);
+      return { start, end };
+    }
+    case '1m': {
+      const start = getPstMonthStartFor(anchorTs);
+      const end = stepPstMonth(start, 1);
+      return { start, end };
+    }
+    case '3m': {
+      const start = getPstMonthStartFor(anchorTs);
+      const end = stepPstMonth(start, 3);
+      return { start, end };
+    }
+    case '1y': {
+      const start = getPstMonthStartFor(anchorTs);
+      const end = stepPstMonth(start, 12);
+      return { start, end };
+    }
+    default: {
+      const start = getPstDayStart(anchorTs);
+      const end = stepPstDay(start, 1);
+      return { start, end };
+    }
+  }
+};
+
+/**
+ * Steps the window anchor for a given timeframe forward (n=+1) or backward (n=-1).
+ */
+export const stepWindowAnchor = (anchorTs: number, timeframe: Timeframe, n: number): number => {
+  switch (timeframe) {
+    case '1d':  return stepPstDay(getPstDayStart(anchorTs), n);
+    case '7d':  return stepPstWeek(getPstWeekStartFor(anchorTs), n);
+    case '1m':  return stepPstMonth(getPstMonthStartFor(anchorTs), n);
+    case '3m':  return stepPstMonth(getPstMonthStartFor(anchorTs), n);
+    case '1y':  return stepPstMonth(getPstMonthStartFor(anchorTs), n);
+    default:    return stepPstDay(getPstDayStart(anchorTs), n);
+  }
+};
+
+/**
+ * Returns the "live" anchor for a timeframe — the start of the current
+ * calendar period (today, this week, this month, etc.).
+ */
+export const getLiveAnchor = (timeframe: Timeframe): number => {
+  const now = Date.now();
+  switch (timeframe) {
+    case '1d':  return getPstDayStart(now);
+    case '7d':  return getPstWeekStartFor(now);
+    case '1m':  return getPstMonthStartFor(now);
+    case '3m':  return getPstMonthStartFor(now);
+    case '1y':  return getPstMonthStartFor(now);
+    default:    return getPstDayStart(now);
+  }
+};
+
+const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** Extracts PST date parts for labelling (year, month 0-based, day, weekday 0=Sun). */
+const getPstDateParts = (ts: number): { year: number; month: number; day: number; weekday: number } => {
+  const parts = TZ_PARTS_FORMATTER.formatToParts(new Date(ts));
+  let year = 0, month = 0, day = 0, weekday = 0;
+  const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  for (const p of parts) {
+    if (p.type === 'year')    year    = Number(p.value);
+    if (p.type === 'month')   month   = Number(p.value) - 1;
+    if (p.type === 'day')     day     = Number(p.value);
+    if (p.type === 'weekday') weekday = weekdayMap[p.value] ?? 0;
+  }
+  return { year, month, day, weekday };
+};
+
+const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/**
+ * Formats a human-readable date-range label for the chart nav bar.
+ * Examples:
+ *   1D  → "Mon, Mar 16"
+ *   7D  → "Mar 10 – 16" or "Feb 24 – Mar 2"
+ *   1M  → "March 2026"
+ *   3M  → "Jan – Mar 2026" or "Nov 2025 – Jan 2026"
+ *   1Y  → "Apr 2025 – Mar 2026"
+ */
+export const formatWindowLabel = (start: number, end: number, timeframe: Timeframe): string => {
+  const s = getPstDateParts(start);
+  // `end` is exclusive, so the last day displayed is end - 1 day
+  const endDisplay = end - 1;
+  const e = getPstDateParts(endDisplay);
+
+  switch (timeframe) {
+    case '1d': {
+      return `${WEEKDAY_SHORT[s.weekday]}, ${MONTH_SHORT[s.month]} ${s.day}`;
+    }
+    case '7d': {
+      if (s.month === e.month && s.year === e.year) {
+        return `${MONTH_SHORT[s.month]} ${s.day} – ${e.day}`;
+      }
+      if (s.year === e.year) {
+        return `${MONTH_SHORT[s.month]} ${s.day} – ${MONTH_SHORT[e.month]} ${e.day}`;
+      }
+      return `${MONTH_SHORT[s.month]} ${s.day} ${s.year} – ${MONTH_SHORT[e.month]} ${e.day} ${e.year}`;
+    }
+    case '1m': {
+      return `${MONTH_LONG[s.month]} ${s.year}`;
+    }
+    case '3m': {
+      if (s.year === e.year) {
+        return `${MONTH_SHORT[s.month]} – ${MONTH_SHORT[e.month]} ${s.year}`;
+      }
+      return `${MONTH_SHORT[s.month]} ${s.year} – ${MONTH_SHORT[e.month]} ${e.year}`;
+    }
+    case '1y': {
+      if (s.year === e.year) {
+        return `${MONTH_SHORT[s.month]} – ${MONTH_SHORT[e.month]} ${s.year}`;
+      }
+      return `${MONTH_SHORT[s.month]} ${s.year} – ${MONTH_SHORT[e.month]} ${e.year}`;
+    }
+    default: {
+      return `${MONTH_SHORT[s.month]} ${s.day}`;
+    }
+  }
 };
