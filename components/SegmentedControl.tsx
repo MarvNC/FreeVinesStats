@@ -22,17 +22,17 @@ const SegmentedControl = <T extends string | number>({
   name,
 }: SegmentedControlProps<T>) => {
   const containerClass = variant === 'elevated' 
-    ? "bg-slate-100 dark:bg-slate-900" 
-    : "bg-slate-50 dark:bg-slate-900/50";
+    ? 'bg-slate-100 dark:bg-slate-900/80' 
+    : 'bg-slate-50 dark:bg-slate-900/40';
 
   const activeClass = variant === 'elevated'
-    ? "bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white"
-    : "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300";
+    ? 'bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white'
+    : 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300';
 
-  const inactiveClass = "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300";
+  const inactiveClass = 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200';
 
   return (
-    <div className={`${containerClass} p-1.5 rounded-xl flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide`}>
+    <div className={`${containerClass} p-1 rounded-xl flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide`} role="group" aria-label={name}>
       {options.map((option) => {
         const isSelected = value === option.value;
         const isDisabled = option.disabled;
@@ -40,7 +40,7 @@ const SegmentedControl = <T extends string | number>({
         return (
           <label 
             key={String(option.value)} 
-            className={`flex-1 sm:flex-none relative ${isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
+            className={`flex-1 sm:flex-none relative ${isDisabled ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}
           >
             <input 
               type="radio" 
@@ -51,7 +51,7 @@ const SegmentedControl = <T extends string | number>({
               disabled={isDisabled}
             />
             <div className={`
-              px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-center uppercase min-w-[3rem] whitespace-nowrap select-none
+              px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 text-center uppercase min-w-[3rem] whitespace-nowrap select-none tracking-wide
               ${isSelected ? activeClass : inactiveClass}
             `}>
               {option.label}

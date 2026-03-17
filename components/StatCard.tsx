@@ -21,34 +21,41 @@ const StatCard: React.FC<StatCardProps> = ({
   iconColorClass 
 }) => {
   const isPositive = trend !== undefined && trend >= 0;
-  // Soften badge when value is very low (likely sparse data, not a real crash)
+  // Soften badge when data is too sparse for a meaningful trend
   const isLowData = value <= 3 && trend !== undefined && trend <= -80;
   const trendColorBg = isLowData
     ? 'bg-slate-100 dark:bg-slate-700'
-    : isPositive ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-rose-100 dark:bg-rose-900';
+    : isPositive ? 'bg-emerald-100 dark:bg-emerald-900/60' : 'bg-rose-100 dark:bg-rose-900/60';
   const trendColorText = isLowData
-    ? 'text-slate-500 dark:text-slate-400'
-    : isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300';
+    ? 'text-slate-400 dark:text-slate-500'
+    : isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300';
   const trendIcon = isPositive ? 'arrow_upward' : 'arrow_downward';
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-40 relative overflow-hidden group transition-transform hover:-translate-y-1">
-      <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity select-none pointer-events-none" aria-hidden="true">
-        <span className={`material-symbols-outlined text-8xl ${iconColorClass}`}>{icon}</span>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-col justify-between h-36 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      {/* Decorative background icon */}
+      <div className="absolute right-0 top-0 p-3 opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none" aria-hidden="true">
+        <span className={`material-symbols-outlined text-7xl ${iconColorClass}`}>{icon}</span>
       </div>
-      <p className="text-slate-500 dark:text-slate-400 font-bold text-sm uppercase tracking-wider z-10">{title}</p>
+
+      {/* Title row */}
+      <div className="flex items-center justify-between z-10">
+        <p className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-widest">{title}</p>
+      </div>
+
+      {/* Value + trend */}
       <div className="z-10">
-        <p className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tighter">
+        <p className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums">
           {value.toLocaleString()}
         </p>
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center gap-2 mt-1.5">
           {trend !== undefined && (
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${trendColorBg} ${trendColorText}`}>
-              <span className="material-symbols-outlined text-sm mr-0.5">{trendIcon}</span>
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold ${trendColorBg} ${trendColorText}`}>
+              <span className="material-symbols-outlined text-[12px]" aria-hidden="true">{trendIcon}</span>
               {Math.abs(trend)}%
             </span>
           )}
-          <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">{trendLabel || subValue}</span>
+          <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">{trendLabel || subValue}</span>
         </div>
       </div>
     </div>

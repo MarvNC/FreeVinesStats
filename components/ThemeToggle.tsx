@@ -3,7 +3,7 @@ import useDarkMode from '../hooks/useDarkMode';
 import { FaSun, FaMoon, FaDesktop } from 'react-icons/fa';
 
 export default function ThemeToggle() {
-  const [resolvedTheme, setTheme, theme] = useDarkMode();
+  const [, setTheme, theme] = useDarkMode();
 
   const handleToggle = () => {
     if (theme === 'system') {
@@ -17,29 +17,29 @@ export default function ThemeToggle() {
 
   const getIcon = () => {
     switch (theme) {
-      case 'system': return <FaDesktop className="w-5 h-5 text-slate-500 dark:text-slate-400" />;
-      case 'light': return <FaSun className="w-5 h-5 text-amber-500" />;
-      case 'dark': return <FaMoon className="w-5 h-5 text-indigo-400" />;
+      case 'system': return <FaDesktop className="w-4 h-4 text-slate-500 dark:text-slate-400" />;
+      case 'light':  return <FaSun className="w-4 h-4 text-amber-500" />;
+      case 'dark':   return <FaMoon className="w-4 h-4 text-indigo-400" />;
     }
   };
 
   const getLabel = () => {
-     switch (theme) {
+    switch (theme) {
       case 'system': return 'System';
-      case 'light': return 'Light';
-      case 'dark': return 'Dark';
+      case 'light':  return 'Light';
+      case 'dark':   return 'Dark';
     }
   };
 
   return (
     <button
       onClick={handleToggle}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors shadow-sm border border-slate-200 dark:border-slate-600"
-      aria-label={`Current theme: ${getLabel()}`}
-      title="Toggle Theme (System -> Light -> Dark)"
+      className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 rounded-full bg-slate-100 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors shadow-sm border border-slate-200/80 dark:border-slate-600/80"
+      aria-label={`Current theme: ${getLabel()}. Click to toggle.`}
+      title="Toggle theme (System → Light → Dark)"
     >
       {getIcon()}
-      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 w-12 text-center select-none">
+      <span className="hidden sm:inline text-xs font-bold text-slate-600 dark:text-slate-300 w-10 text-center select-none">
         {getLabel()}
       </span>
     </button>
