@@ -196,26 +196,20 @@ const getChartLabelParts = (partMap: Record<string, string>, granularity: Granul
  *     (handled externally via ReferenceLine labels; auto-ticks show time only)
  */
 export const formatChartTickLabel = (ts: number, granularity: Granularity, showWeekday = false): string => {
-  if (!Number.isFinite(ts)) return '';
-  // For hour/15m granularities, use local timezone; for daily, keep PST
-  const partMap = (granularity === '1h' || granularity === '15m')
-    ? buildLocalPartMap(ts)
-    : buildPartMap(ts);
+  if (!ts || isNaN(ts)) return '';
+
+  const partMap = (granularity !== '1d')
+    ? TZ_PARTS_FORMATTER.formatToParts(new Date(ts)).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {})
+    : LOCAL_PARTS_FORMATTER.formatToParts(new Date(ts)).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+
   const { fullDate: _fd, weekday, monthLabel, day, hour, minute } = getChartLabelParts(partMap, granularity);
 
   if (granularity === '1d') {
-    // Always include weekday for daily bars
-    return `${weekday} ${monthLabel} ${day}`;
+    return showWeekday ? `${weekday} ${monthLabel} ${day}` : `${monthLabel} ${day}`;
   }
-  if (granularity === '1h' || granularity === '15m') {
-    if (showWeekday) {
-      // Used for midnight reference-line labels: "Mon Mar 9"
-      return `${weekday} ${monthLabel} ${Number(day)}`;
-    }
-    // Regular hour/15m ticks: just time, e.g. "06:00"
-    return `${hour}:${minute}`;
-  }
-  return `${monthLabel} ${day}`;
+
+  // 1d case is already returned above, this is the remaining fallback
+  return hour === '00' && minute === '00' ? `${weekday} ${day}` : `${hour}:${minute}`;
 };
 
 /**
@@ -318,23 +312,15 @@ export const getPstMonthStartTimestamps = (startTs: number, endTs: number): numb
 };
 
 const formatChartPoints = (raw: ChartDataPointRaw[], granularity: Granularity): ChartDataPoint[] => {
-  if (raw.length === 0) return [];
-
   return raw.map(point => {
     const partMap = buildPartMap(point.date);
     const { fullDate, weekday, monthLabel, day, hour, minute } = getChartLabelParts(partMap, granularity);
-    // Tooltip label stored on each data point (legacy field, still used by tooltip)
+
     const label = granularity === '1d'
       ? `${weekday} ${monthLabel} ${day}`
-      : granularity === '1h'
-        ? `${monthLabel} ${day} ${hour}:${minute}`
-        : `${hour}:${minute}`;
+      : `${hour}:${minute}`;
 
-    return {
-      ...point,
-      label,
-      fullDate
-    };
+    return { ...point, label, fullDate };
   });
 };
 
@@ -439,7 +425,13 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
   if (!history.length) return [];
 
   const endTime = Math.max(Date.now(), history[history.length - 1].t);
-  const intervalMs = granularity === '15m' ? 15 * MINUTE_MS : granularity === '1h' ? HOUR_MS : DAY_MS;
+  const intervalMs = granularity === '15m' ? 15 * MINUTE_MS 
+                   : granularity === '1h' ? HOUR_MS 
+                   : granularity === '2h' ? 2 * HOUR_MS
+                   : granularity === '4h' ? 4 * HOUR_MS
+                   : granularity === '6h' ? 6 * HOUR_MS
+                   : granularity === '12h' ? 12 * HOUR_MS
+                   : DAY_MS;
   const results: ChartDataPointRaw[] = [];
 
   if (granularity === '1d') {
