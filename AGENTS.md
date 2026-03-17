@@ -7,7 +7,7 @@ Coding agent instructions for the FreeVinesStats repository.
 ## Project Overview
 
 React 19 + TypeScript + Vite frontend dashboard that displays Amazon Vine item statistics.
-Uses Tailwind CSS v4 for styling, Recharts for charts, Day.js for date handling, and Lodash for data processing.
+Uses Tailwind CSS v4 for styling, Chart.js (via react-chartjs-2) for charts, Day.js for date handling, and Lodash for data processing.
 **Package manager: Bun** (use `bun` for all installs and script runs — not npm/yarn).
 
 ---
@@ -86,7 +86,7 @@ There is no standalone `tsc` script; type errors surface via `bun run build`.
   ```
 - Import order (no enforcer, follow this manually):
   1. React and React-ecosystem packages
-  2. Third-party libraries (dayjs, lodash, recharts, react-icons)
+  2. Third-party libraries (dayjs, lodash, chart.js, react-chartjs-2, lucide-react)
   3. Internal modules via `@/` alias (services, utils, hooks, components)
   4. Type-only imports (`import type ...`)
 - dayjs plugins are extended at module top level, not inside components.
@@ -141,7 +141,7 @@ There is no standalone `tsc` script; type errors surface via `bun run build`.
   - Shadow: `shadow-soft`
 - Use `dark:` variants for every color that differs between themes.
 - Material Symbols icons are loaded via CDN as `<span class="material-symbols-outlined">`.
-- `react-icons` is used for brand icons (e.g., `FaGithub`).
+- `lucide-react` is used for icons.
 - Avoid arbitrary Tailwind values; prefer the configured theme tokens.
 
 ### Data Layer
