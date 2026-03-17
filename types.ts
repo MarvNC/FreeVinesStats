@@ -29,7 +29,7 @@ export interface DashboardStats {
 }
 
 export type Timeframe = '1d' | '7d' | '1m' | '3m' | '1y';
-export type Granularity = '15m' | '1h' | '2h' | '4h' | '6h' | '12h' | '1d';
+export type Granularity = '15m' | '30m' | '1h' | '2h' | '4h' | '6h' | '12h' | '1d';
 export type DataFilter = 'all' | 'zeroEtv' | 'afa';
 
 export interface ChartDataPoint {

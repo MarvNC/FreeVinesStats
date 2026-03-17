@@ -426,6 +426,7 @@ export const processChartData = (history: HistoryItem[], granularity: Granularit
 
   const endTime = Math.max(Date.now(), history[history.length - 1].t);
   const intervalMs = granularity === '15m' ? 15 * MINUTE_MS 
+                   : granularity === '30m' ? 30 * MINUTE_MS
                    : granularity === '1h' ? HOUR_MS 
                    : granularity === '2h' ? 2 * HOUR_MS
                    : granularity === '4h' ? 4 * HOUR_MS

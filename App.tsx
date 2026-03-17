@@ -15,6 +15,7 @@ import PulseChart from './components/PulseChart';
 import WeeklyActivity from './components/WeeklyActivity';
 import HourlyIntensity from './components/HourlyIntensity';
 import SegmentedControl from './components/SegmentedControl';
+import useIsMobile from './hooks/useIsMobile';
 
 const App: React.FC = () => {
   const [rawData, setRawData] = useState<StatsData | null>(null);
@@ -22,26 +23,20 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   const [timeframe, setTimeframe] = useState<Timeframe>('1d');
-  const [granularity, setGranularity] = useState<Granularity>('1h');
   const [dataFilter, setDataFilter] = useState<DataFilter>('all');
+  const isMobile = useIsMobile();
 
-  // Enforce Granularity Constraints
-  const validGranularities = useMemo((): Granularity[] => {
+  // Auto-derive granularity to optimize chart readability across devices
+  const granularity = useMemo((): Granularity => {
     switch (timeframe) {
-      case '1d': return ['15m', '1h'];
-      case '7d': return ['1h', '1d'];
-      case '1m': return ['1d'];
-      case '3m': return ['1d'];
-      case '1y': return ['1d'];
-      default: return ['1d'];
+      case '1d': return isMobile ? '30m' : '15m'; // ~48 vs 96 bars
+      case '7d': return isMobile ? '4h' : '1h';   // ~42 vs 168 bars
+      case '1m': return '1d';                     // ~30 bars
+      case '3m': return '1d';                     // ~90 bars
+      case '1y': return '1d';                     // ~365 bars (handled well by recharts density)
+      default: return '1d';
     }
-  }, [timeframe]);
-
-  useEffect(() => {
-    if (!validGranularities.includes(granularity)) {
-      setGranularity(validGranularities[0]);
-    }
-  }, [timeframe, validGranularities, granularity]);
+  }, [timeframe, isMobile]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -199,10 +194,8 @@ const App: React.FC = () => {
         <PulseChart 
           data={chartData} 
           granularity={granularity}
-          onGranularityChange={setGranularity}
           timeframe={timeframe} 
           onTimeframeChange={setTimeframe} 
-          validGranularities={validGranularities}
         />
 
         {/* Heatmaps */}

@@ -27,10 +27,8 @@ import useDarkMode from '../hooks/useDarkMode';
 interface PulseChartProps {
   data: ChartDataPoint[];
   granularity: Granularity;
-  onGranularityChange: (g: Granularity) => void;
   timeframe: Timeframe;
   onTimeframeChange: (tf: Timeframe) => void;
-  validGranularities: Granularity[];
 }
 
 const SERIES = [
@@ -42,10 +40,8 @@ const SERIES = [
 const PulseChart: React.FC<PulseChartProps> = ({ 
   data, 
   granularity, 
-  onGranularityChange,
   timeframe,
-  onTimeframeChange,
-  validGranularities
+  onTimeframeChange
 }) => {
   // null = live (current calendar period). A timestamp = viewing a historical period.
   const [windowAnchor, setWindowAnchor] = useState<number | null>(null);
@@ -114,6 +110,13 @@ const PulseChart: React.FC<PulseChartProps> = ({
     if (data.length === 0) return [];
     return data.filter(d => d.date >= windowStart && d.date < windowEnd);
   }, [data, windowStart, windowEnd]);
+
+  const seriesTotals = useMemo(() => {
+    return SERIES.map(s => ({
+      ...s,
+      total: visibleData.reduce((sum, d) => sum + ((d[s.key as keyof ChartDataPoint] as number) || 0), 0)
+    }));
+  }, [visibleData]);
 
   const intervalMs = useMemo(() => {
     switch (granularity) {
@@ -196,12 +199,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
     );
   };
 
-  const granularityOptions: Option<Granularity>[] = (['15m', '1h', '1d'] as Granularity[]).map(g => ({
-    value: g,
-    label: g === '15m' ? '15m' : g === '1h' ? '1h' : '1d',
-    disabled: !validGranularities.includes(g)
-  }));
-
   const timeframeOptions: Option<Timeframe>[] = (['1d', '7d', '1m', '3m', '1y'] as Timeframe[]).map(tf => ({
     value: tf,
     label: tf
@@ -210,38 +207,87 @@ const PulseChart: React.FC<PulseChartProps> = ({
   return (
     <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 p-5 sm:p-7">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">The Pulse</h2>
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-medium mt-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-5">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">The Pulse</h2>
+            
+            {/* Step navigation row */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={stepBack}
+                  disabled={!canStepBack}
+                  aria-label="Previous period"
+                  className="flex items-center justify-center size-7 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
+                >
+                  <span className="material-symbols-outlined text-[16px] leading-none select-none" aria-hidden="true">chevron_left</span>
+                </button>
+                <button
+                  onClick={stepForward}
+                  disabled={!canStepForward}
+                  aria-label="Next period"
+                  className="flex items-center justify-center size-7 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
+                >
+                  <span className="material-symbols-outlined text-[16px] leading-none select-none" aria-hidden="true">chevron_right</span>
+                </button>
+              </div>
+
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums min-w-0 truncate">
+                {windowLabel}
+              </span>
+
+              <button
+                onClick={goLive}
+                aria-label="Jump to current period"
+                aria-hidden={isLive}
+                tabIndex={isLive ? -1 : 0}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-150 flex-shrink-0
+                  bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300
+                  hover:bg-primary/20 dark:hover:bg-primary/30
+                  ${isLive ? 'opacity-0 pointer-events-none w-0 p-0 overflow-hidden' : 'opacity-100'}`}
+              >
+                <span className="relative flex size-1.5 flex-shrink-0">
+                  <span className="animate-ping absolute inline-flex size-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-primary" />
+                </span>
+                Today
+              </button>
+            </div>
+          </div>
+
+          <p className="text-slate-400 dark:text-slate-500 text-xs font-medium">
             {granularity === '1d'
               ? 'Daily item counts · PST calendar days'
               : 'Dashed lines mark midnight PST — when Vine drops launch'}
           </p>
-          {/* Series legend */}
-          <div className="flex items-center gap-4 mt-2.5">
-            {SERIES.map(({ key, label, color }) => (
+
+          {/* Series legend with totals */}
+          <div className="flex flex-wrap items-center gap-4 mt-1">
+            {seriesTotals.map(({ key, label, color, total }) => (
               <span key={key} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
                 <span className="inline-block size-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
-                {label}
+                {label} <span className="font-semibold text-slate-700 dark:text-slate-300 ml-0.5">({total.toLocaleString()})</span>
               </span>
             ))}
           </div>
         </div>
         
-        <SegmentedControl 
-          options={granularityOptions}
-          value={granularity}
-          onChange={onGranularityChange}
-          name="granularity"
-          variant="elevated"
-        />
+        <div className="flex-shrink-0">
+          <SegmentedControl 
+            options={timeframeOptions}
+            value={timeframe}
+            onChange={onTimeframeChange}
+            name="timeframe"
+            variant="elevated"
+          />
+        </div>
       </div>
 
       {/* Chart */}
-      <div className="h-64 w-full mb-5">
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-          <BarChart data={visibleData} margin={{ top: 16, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
+          <BarChart data={visibleData} margin={{ top: 16, right: 0, left: 0, bottom: 0 }} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="0" vertical={false} stroke={gridColor} />
             <XAxis 
               dataKey="date" 
@@ -255,6 +301,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               padding={{ left: 4, right: 4 }}
             />
             <YAxis 
+              orientation="right"
               axisLine={false} 
               tickLine={false} 
               tick={{ fill: axisColor, fontSize: 10, fontWeight: 500 }} 
@@ -281,7 +328,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
                 strokeWidth={1.5}
                 label={{
                   value: formatMidnightLabel(ts, true),
-                  position: 'insideTopRight',
+                  position: 'insideTopLeft',
                   fontSize: 9,
                   fontWeight: 700,
                   fill: axisColor,
@@ -295,11 +342,11 @@ const PulseChart: React.FC<PulseChartProps> = ({
                 x={ts}
                 stroke={axisColor}
                 strokeDasharray="4 4"
-                strokeOpacity={0.7}
+                strokeOpacity={0.5}
                 strokeWidth={1.5}
                 label={midnightLabelMode !== 'none' ? {
                   value: formatMidnightLabel(ts, midnightLabelMode === 'full'),
-                  position: 'insideTopRight',
+                  position: 'insideTopLeft',
                   fontSize: 9,
                   fontWeight: 700,
                   fill: axisColor,
@@ -313,68 +360,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
             <Bar dataKey="ai"         stackId="s" radius={[4, 4, 0, 0]} minPointSize={2} fill="#3b82f6" />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Navigation + timeframe controls */}
-      <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-700/50 flex flex-col gap-4">
-
-        {/* Step navigation row */}
-        <div className="flex items-center justify-between gap-3">
-
-          {/* Back / Forward buttons */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={stepBack}
-              disabled={!canStepBack}
-              aria-label="Previous period"
-              className="flex items-center justify-center size-8 rounded-lg bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
-            >
-              <span className="material-symbols-outlined text-[18px] leading-none select-none" aria-hidden="true">chevron_left</span>
-            </button>
-            <button
-              onClick={stepForward}
-              disabled={!canStepForward}
-              aria-label="Next period"
-              className="flex items-center justify-center size-8 rounded-lg bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
-            >
-              <span className="material-symbols-outlined text-[18px] leading-none select-none" aria-hidden="true">chevron_right</span>
-            </button>
-          </div>
-
-          {/* Date range label */}
-          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums text-center flex-1 min-w-0 truncate">
-            {windowLabel}
-          </span>
-
-          {/* Today pill — always takes space to prevent layout shift, invisible when live */}
-          <button
-            onClick={goLive}
-            aria-label="Jump to current period"
-            aria-hidden={isLive}
-            tabIndex={isLive ? -1 : 0}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 flex-shrink-0
-              bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300
-              hover:bg-primary/20 dark:hover:bg-primary/30
-              ${isLive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-          >
-            <span className="relative flex size-1.5 flex-shrink-0">
-              <span className="animate-ping absolute inline-flex size-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-primary" />
-            </span>
-            Today
-          </button>
-        </div>
-
-        {/* Timeframe selector */}
-        <div className="flex justify-center">
-          <SegmentedControl 
-            options={timeframeOptions}
-            value={timeframe}
-            onChange={onTimeframeChange}
-            name="timeframe"
-            variant="flat"
-          />
-        </div>
       </div>
     </section>
   );
