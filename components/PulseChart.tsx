@@ -74,7 +74,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const [mousePos, setMousePos] = useState<MousePos>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const gridMajor  = isDark ? 'rgba(148,163,184,0.15)' : 'rgba(15,23,42,0.08)';
+  const gridMajor  = isDark ? 'rgba(148,163,184,0.10)' : 'rgba(15,23,42,0.08)';
   const axisColor  = isDark ? '#64748b' : '#94a3b8';
   const refColor   = isDark ? '#64748b' : '#94a3b8';
 
@@ -243,7 +243,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: isDark ? 'rgba(148,163,184,0.10)' : 'rgba(15,23,42,0.06)',
+        borderColor: isDark ? 'rgba(148,163,184,0.06)' : 'rgba(15,23,42,0.06)',
         borderWidth: 1,
         label: { display: false },
       };
@@ -255,7 +255,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: isDark ? 'rgba(148,163,184,0.25)' : 'rgba(15,23,42,0.12)',
+        borderColor: isDark ? 'rgba(148,163,184,0.15)' : 'rgba(15,23,42,0.12)',
         borderWidth: 1,
         label: { display: false },
       };
@@ -494,12 +494,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
               </button>
             </div>
           </div>
-
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-medium">
-            {granularity === '1d'
-              ? 'Daily item counts · PST calendar days'
-              : 'Dashed lines mark midnight PST — when Vine drops launch'}
-          </p>
 
           {/* Series legend with totals */}
           <div className="flex flex-wrap items-center gap-4 mt-1">

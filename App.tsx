@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
-import { Github, Activity, CloudOff, Clock, TrendingUp, Calendar } from 'lucide-react';
+import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -114,8 +114,8 @@ const App: React.FC = () => {
       <header className="w-full max-w-6xl px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="size-10 sm:size-12 bg-white dark:bg-slate-800 text-primary border border-primary/20 rounded-2xl flex items-center justify-center shadow-soft">
-            <Activity size={20} className="text-primary sm:hidden" />
-            <Activity size={24} className="text-primary hidden sm:block" />
+            <ChartNoAxesCombined size={20} className="text-primary sm:hidden" />
+            <ChartNoAxesCombined size={24} className="text-primary hidden sm:block" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             FreeVinesStats
