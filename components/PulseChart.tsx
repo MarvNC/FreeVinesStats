@@ -135,14 +135,14 @@ const PulseChart: React.FC<PulseChartProps> = ({
   }, [windowStart, windowEnd, intervalMs]);
 
   const pstMidnightLines = useMemo(() => {
-    if (granularity !== '1h' && granularity !== '15m') return [];
+    if (granularity === '1d') return [];
     return getPstMidnightTimestamps(windowStart, windowEnd);
   }, [granularity, windowStart, windowEnd]);
 
   // For sub-day granularities, label midnight lines with the day name.
   // In 7D view show short "Mon", "Tue" etc.; in 1D view show full "Mon Mar 9".
   const midnightLabelMode: 'none' | 'short' | 'full' = useMemo(() => {
-    if (granularity !== '1h' && granularity !== '15m') return 'none';
+    if (granularity === '1d') return 'none';
     return timeframe === '1d' ? 'full' : 'short';
   }, [granularity, timeframe]);
 
@@ -168,7 +168,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const point = payload[0].payload as ChartDataPoint;
-    const showLocalTime = granularity === '1h' || granularity === '15m';
+    const showLocalTime = granularity !== '1d';
     const dateDisplay = showLocalTime
       ? new Date(point.date).toLocaleString('en-US', { 
           weekday: 'short', month: 'short', day: 'numeric',
