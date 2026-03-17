@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { FaGithub } from 'react-icons/fa';
+import { Github, Activity, CloudOff, Clock, TrendingUp, Calendar } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -96,7 +96,7 @@ const App: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background-light dark:bg-background-dark text-slate-500">
-        <span className="material-symbols-outlined text-4xl text-rose-400">cloud_off</span>
+        <CloudOff size={36} className="text-rose-400" />
         <p className="text-sm font-medium">{error}</p>
       </div>
     );
@@ -107,7 +107,8 @@ const App: React.FC = () => {
       <header className="w-full max-w-6xl px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="size-10 sm:size-12 bg-white dark:bg-slate-800 text-primary border border-primary/20 rounded-2xl flex items-center justify-center shadow-soft">
-            <span className="material-symbols-outlined text-xl sm:text-2xl">monitoring</span>
+            <Activity size={20} className="text-primary sm:hidden" />
+            <Activity size={24} className="text-primary hidden sm:block" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             FreeVinesStats
@@ -150,7 +151,7 @@ const App: React.FC = () => {
             title="Last Hour" 
             value={dashboardStats.lastHour} 
             subValue="New Items" 
-            icon="schedule" 
+            icon={Clock}
             iconColorClass="text-primary"
           />
           <StatCard 
@@ -159,7 +160,7 @@ const App: React.FC = () => {
             subValue={`vs Median (${dashboardStats.todayMedian})`}
             trend={dashboardStats.todayGrowth}
             trendLabel="vs Median"
-            icon="trending_up" 
+            icon={TrendingUp}
             iconColorClass="text-emerald-500"
           />
           <StatCard 
@@ -168,7 +169,7 @@ const App: React.FC = () => {
             subValue={`vs Median (${dashboardStats.weekMedian})`}
             trend={dashboardStats.weekGrowth}
             trendLabel="vs Median"
-            icon="calendar_month" 
+            icon={Calendar}
             iconColorClass="text-violet-500"
           />
         </section>
@@ -218,7 +219,7 @@ const App: React.FC = () => {
           className="flex items-center gap-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           aria-label="View source on GitHub"
         >
-          <FaGithub className="w-5 h-5" />
+          <Github size={20} />
           <span className="text-sm font-medium">By MarvNC</span>
         </a>
         <p className="text-xs">

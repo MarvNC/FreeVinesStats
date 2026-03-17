@@ -1,4 +1,6 @@
 import React from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -6,7 +8,7 @@ interface StatCardProps {
   subValue: string;
   trend?: number; // percentage
   trendLabel?: string;
-  icon: string;
+  icon: LucideIcon;
   iconColorClass: string;
   trendReverse?: boolean; // if true, positive is bad (not used here but good for future)
 }
@@ -17,7 +19,7 @@ const StatCard: React.FC<StatCardProps> = ({
   subValue, 
   trend, 
   trendLabel, 
-  icon, 
+  icon: Icon, 
   iconColorClass 
 }) => {
   const isPositive = trend !== undefined && trend >= 0;
@@ -29,13 +31,12 @@ const StatCard: React.FC<StatCardProps> = ({
   const trendColorText = isLowData
     ? 'text-slate-400 dark:text-slate-500'
     : isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300';
-  const trendIcon = isPositive ? 'arrow_upward' : 'arrow_downward';
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-col justify-between h-36 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
       {/* Decorative background icon */}
       <div className="absolute right-0 top-0 p-3 opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none" aria-hidden="true">
-        <span className={`material-symbols-outlined text-7xl ${iconColorClass}`}>{icon}</span>
+        <Icon size={72} className={iconColorClass} />
       </div>
 
       {/* Title row */}
@@ -51,7 +52,10 @@ const StatCard: React.FC<StatCardProps> = ({
         <div className="flex items-center gap-2 mt-1.5">
           {trend !== undefined && (
             <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold ${trendColorBg} ${trendColorText}`}>
-              <span className="material-symbols-outlined text-[12px]" aria-hidden="true">{trendIcon}</span>
+              {isPositive
+                ? <ArrowUp size={11} aria-hidden="true" />
+                : <ArrowDown size={11} aria-hidden="true" />
+              }
               {Math.abs(trend)}%
             </span>
           )}

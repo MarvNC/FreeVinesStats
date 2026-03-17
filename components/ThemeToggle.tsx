@@ -1,6 +1,6 @@
 import React from 'react';
 import useDarkMode from '../hooks/useDarkMode';
-import { FaSun, FaMoon, FaDesktop } from 'react-icons/fa';
+import { Sun, Moon, Monitor } from 'lucide-react';
 
 export default function ThemeToggle() {
   const [, setTheme, theme] = useDarkMode();
@@ -17,9 +17,9 @@ export default function ThemeToggle() {
 
   const getIcon = () => {
     switch (theme) {
-      case 'system': return <FaDesktop className="w-4 h-4 text-slate-500 dark:text-slate-400" />;
-      case 'light':  return <FaSun className="w-4 h-4 text-amber-500" />;
-      case 'dark':   return <FaMoon className="w-4 h-4 text-indigo-400" />;
+      case 'system': return <Monitor size={16} className="text-slate-500 dark:text-slate-400" />;
+      case 'light':  return <Sun size={16} className="text-amber-500" />;
+      case 'dark':   return <Moon size={16} className="text-indigo-400" />;
     }
   };
 
