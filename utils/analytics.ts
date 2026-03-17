@@ -224,6 +224,33 @@ export const formatMidnightLabel = (ts: number, showDate = false): string => {
   return weekday ?? '';
 };
 
+/** Returns "HH:00" in PST for a given timestamp (for X-axis hour labels). */
+export const formatPstHourLabel = (ts: number): string => {
+  if (!Number.isFinite(ts)) return '';
+  const partMap = TZ_PARTS_FORMATTER.formatToParts(new Date(ts))
+    .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+  const h = (partMap['hour'] ?? '0').padStart(2, '0');
+  return `${h}:00`;
+};
+
+/** Returns "Mon", "Tue" … in PST for a given timestamp (for X-axis day labels). */
+export const formatPstWeekdayLabel = (ts: number): string => {
+  if (!Number.isFinite(ts)) return '';
+  const partMap = TZ_PARTS_FORMATTER.formatToParts(new Date(ts))
+    .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+  const { weekday } = getChartLabelParts(partMap, '1h');
+  return weekday ?? '';
+};
+
+/** Returns "Jan", "Feb" … in PST for a given timestamp (for X-axis month labels). */
+export const formatPstMonthLabel = (ts: number): string => {
+  if (!Number.isFinite(ts)) return '';
+  const partMap = TZ_PARTS_FORMATTER.formatToParts(new Date(ts))
+    .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+  const { monthLabel } = getChartLabelParts(partMap, '1h');
+  return monthLabel ?? '';
+};
+
 export const getPstMidnightTimestamps = (startTs: number, endTs: number): number[] => {
   if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return [];
   const start = Math.min(startTs, endTs);
@@ -244,6 +271,32 @@ export const getPstMidnightTimestamps = (startTs: number, endTs: number): number
   }
 
   return midnights;
+};
+
+/**
+ * Returns PST-aligned timestamps every `intervalHours` hours between startTs and endTs.
+ * Alignment is relative to PST midnight (00:00 PST), so e.g. intervalHours=4 gives 00/04/08/12/16/20.
+ */
+export const getPstHourAlignedTimestamps = (startTs: number, endTs: number, intervalHours: number): number[] => {
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || intervalHours <= 0) return [];
+  const start = Math.min(startTs, endTs);
+  const end   = Math.max(startTs, endTs);
+  const intervalMs = intervalHours * HOUR_MS;
+  const segments = buildOffsetSegments(start - DAY_MS, end + DAY_MS);
+  const startOffset = getOffsetAt(start, segments);
+  // Find the PST midnight before start
+  const startLocal = start + startOffset;
+  const dayKey = Math.floor(startLocal / DAY_MS);
+  const midnightLocal = dayKey * DAY_MS;
+  // Walk forward in intervalMs steps from midnight
+  const result: number[] = [];
+  for (let localT = midnightLocal; localT <= end + startOffset + intervalMs; localT += intervalMs) {
+    const utcT = getUtcForLocal(localT, segments);
+    if (utcT >= start && utcT <= end) {
+      result.push(utcT);
+    }
+  }
+  return result;
 };
 
 export const getPstWeekStartTimestamps = (startTs: number, endTs: number): number[] => {
@@ -830,6 +883,7 @@ export const stepWindowAnchor = (anchorTs: number, timeframe: Timeframe, n: numb
 /**
  * Returns the "live" anchor for a timeframe — the start of the current
  * calendar period (today, this week, this month, etc.).
+ * Used only for history navigation snapping.
  */
 export const getLiveAnchor = (timeframe: Timeframe): number => {
   const now = Date.now();
@@ -840,6 +894,29 @@ export const getLiveAnchor = (timeframe: Timeframe): number => {
     case '3m':  return getPstMonthStartFor(now);
     case '1y':  return getPstMonthStartFor(now);
     default:    return getPstDayStart(now);
+  }
+};
+
+/**
+ * Returns a rolling live window ending at the end of the current PST day.
+ * This is used as the default "live" view for each timeframe:
+ *   1d  → today (PST calendar day, unchanged)
+ *   7d  → past 7 calendar days (today + 6 days back)
+ *   1m  → past 30 calendar days
+ *   3m  → past 90 calendar days
+ *   1y  → past 365 calendar days
+ */
+export const getLiveWindow = (timeframe: Timeframe): CalendarWindow => {
+  const now = Date.now();
+  const todayStart = getPstDayStart(now);
+  const todayEnd   = stepPstDay(todayStart, 1);
+  switch (timeframe) {
+    case '1d':  return { start: todayStart, end: todayEnd };
+    case '7d':  return { start: stepPstDay(todayStart, -6), end: todayEnd };
+    case '1m':  return { start: stepPstDay(todayStart, -29), end: todayEnd };
+    case '3m':  return { start: stepPstDay(todayStart, -89), end: todayEnd };
+    case '1y':  return { start: stepPstDay(todayStart, -364), end: todayEnd };
+    default:    return { start: todayStart, end: todayEnd };
   }
 };
 

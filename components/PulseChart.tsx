@@ -15,13 +15,16 @@ import { Bar } from 'react-chartjs-2';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChartDataPoint, Timeframe, Granularity } from '../types';
 import {
-  formatChartTickLabel,
-  formatMidnightLabel,
+  formatPstHourLabel,
+  formatPstWeekdayLabel,
+  formatPstMonthLabel,
   getPstMidnightTimestamps,
+  getPstHourAlignedTimestamps,
   getPstMonthStartTimestamps,
   getPstWeekStartTimestamps,
   getCalendarWindow,
   getLiveAnchor,
+  getLiveWindow,
   stepWindowAnchor,
   formatWindowLabel,
 } from '../utils/analytics';
@@ -30,6 +33,9 @@ import useDarkMode from '../hooks/useDarkMode';
 
 // Register only what we need — no pie, sankey, treemap, etc.
 Chart.register(BarController, BarElement, LinearScale, ChartTooltip, annotationPlugin);
+
+// Match site typography (Inter loaded via CSS)
+Chart.defaults.font.family = "'Inter', sans-serif";
 
 interface PulseChartProps {
   data: ChartDataPoint[];
@@ -44,12 +50,15 @@ const SERIES = [
   { key: 'ai',         label: 'AI',    color: '#3b82f6' },
 ] as const;
 
-// Tooltip state shared between Chart.js callback and React renderer
+// Tooltip state: data comes from Chart.js callback, position from mouse events
 interface TooltipState {
   visible: boolean;
+  point: ChartDataPoint | null;
+}
+
+interface MousePos {
   x: number;
   y: number;
-  point: ChartDataPoint | null;
 }
 
 const PulseChart: React.FC<PulseChartProps> = ({
@@ -61,10 +70,11 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const [windowAnchor, setWindowAnchor] = useState<number | null>(null);
   const [resolvedTheme] = useDarkMode();
   const isDark = resolvedTheme === 'dark';
-  const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, x: 0, y: 0, point: null });
+  const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, point: null });
+  const [mousePos, setMousePos] = useState<MousePos>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const gridColor  = isDark ? '#1e293b' : '#f1f5f9';
+  const gridMajor  = isDark ? 'rgba(148,163,184,0.15)' : 'rgba(15,23,42,0.08)';
   const axisColor  = isDark ? '#64748b' : '#94a3b8';
   const refColor   = isDark ? '#64748b' : '#94a3b8';
 
@@ -78,9 +88,15 @@ const PulseChart: React.FC<PulseChartProps> = ({
   }, [windowAnchor, timeframe]);
 
   const { windowStart, windowEnd } = useMemo(() => {
+    // Live view: rolling window (past N days ending today)
+    // History view: calendar-snapped window for clean period navigation
+    if (windowAnchor === null) {
+      const { start, end } = getLiveWindow(timeframe);
+      return { windowStart: start, windowEnd: end };
+    }
     const { start, end } = getCalendarWindow(effectiveAnchor, timeframe);
     return { windowStart: start, windowEnd: end };
-  }, [effectiveAnchor, timeframe]);
+  }, [windowAnchor, effectiveAnchor, timeframe]);
 
   const isLive = useMemo(() => {
     if (windowAnchor === null) return true;
@@ -99,8 +115,12 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const canStepForward = !isLive;
 
   const stepBack = useCallback(() => {
-    setWindowAnchor(stepWindowAnchor(effectiveAnchor, timeframe, -1));
-  }, [effectiveAnchor, timeframe]);
+    // When stepping back from the live rolling window, anchor to the calendar
+    // period containing windowStart (the earliest visible day), then go one back.
+    // This ensures the first ← from "past 7 days" shows a clean prior week.
+    const anchorForStep = windowAnchor === null ? windowStart : effectiveAnchor;
+    setWindowAnchor(stepWindowAnchor(anchorForStep, timeframe, -1));
+  }, [windowAnchor, windowStart, effectiveAnchor, timeframe]);
 
   const stepForward = useCallback(() => {
     const newAnchor = stepWindowAnchor(effectiveAnchor, timeframe, +1);
@@ -137,91 +157,112 @@ const PulseChart: React.FC<PulseChartProps> = ({
 
   const windowLabel = useMemo(() => formatWindowLabel(windowStart, windowEnd, timeframe), [windowStart, windowEnd, timeframe]);
 
-  // ── Reference line annotations ──────────────────────────────────────────────
-  const pstMidnightLines = useMemo(() => {
-    if (granularity === '1d') return [];
-    return getPstMidnightTimestamps(windowStart, windowEnd);
-  }, [granularity, windowStart, windowEnd]);
+  // ── X-axis grid line intervals by timeframe ──────────────────────────────────
+  // Major lines = prominent structural dividers (with labels where applicable).
+  // Minor lines = subtle subdivision guides, no labels.
+  //
+  //  1d  → major every 4h PST,  minor every 1h PST
+  //  7d  → major every 1d PST (midnight, with weekday label), minor every 6h PST
+  //  1m  → major every 1 week PST, minor every 1d PST (midnight)
+  //  3m  → major every 1 month PST, minor every 1 week PST
+  //  1y  → major every 1 month PST, no minor
 
-  const midnightLabelMode: 'none' | 'short' | 'full' = useMemo(() => {
-    if (granularity === '1d') return 'none';
-    return timeframe === '1d' ? 'full' : 'short';
-  }, [granularity, timeframe]);
+  const xMajorLines = useMemo(() => {
+    switch (timeframe) {
+      case '1d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 4);
+      case '7d': return getPstMidnightTimestamps(windowStart, windowEnd);
+      case '1m': return getPstWeekStartTimestamps(windowStart, windowEnd);
+      case '3m':
+      case '1y': return getPstMonthStartTimestamps(windowStart, windowEnd);
+      default:   return [];
+    }
+  }, [timeframe, windowStart, windowEnd]);
 
-  const showWeekMarkers  = granularity === '1d' && (timeframe === '1m' || timeframe === '3m' || timeframe === '1y');
-  const showMonthMarkers = granularity === '1d' && (timeframe === '3m' || timeframe === '1y');
-  const weekMarkerOpacity = timeframe === '1m' ? 0.5 : 0.25;
+  const xMinorLines = useMemo(() => {
+    switch (timeframe) {
+      case '1d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 1);
+      case '7d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 6);
+      case '1m': return getPstMidnightTimestamps(windowStart, windowEnd);
+      case '3m': return getPstWeekStartTimestamps(windowStart, windowEnd);
+      case '1y': return [];
+      default:   return [];
+    }
+  }, [timeframe, windowStart, windowEnd]);
 
-  const pstWeekStartLines  = useMemo(() => showWeekMarkers  ? getPstWeekStartTimestamps(windowStart, windowEnd)  : [], [showWeekMarkers, windowStart, windowEnd]);
-  const pstMonthStartLines = useMemo(() => showMonthMarkers ? getPstMonthStartTimestamps(windowStart, windowEnd) : [], [showMonthMarkers, windowStart, windowEnd]);
+  // Map of tick timestamp → label text, used by the X scale callback.
+  //
+  //  1d       → tick AT each major line (every 4h):     "04:00", "08:00" …
+  //  7d       → tick CENTERED in each day span:         "Mon", "Tue" …
+  //  1m       → tick AT each week-start (Monday PST):   "Mar 9", "Mar 16" …
+  //             (week-start is unambiguous; midpoint weekday is arbitrary)
+  //  3m / 1y  → tick CENTERED in each month span:       "Jan", "Feb" …
+  const xTickMap = useMemo((): Map<number, string> => {
+    const map = new Map<number, string>();
+    const pstDayFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', day: 'numeric' });
+    const pstMonFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', month: 'short' });
+
+    if (timeframe === '1d') {
+      // Label at each 4h major line
+      xMajorLines.forEach(ts => map.set(ts, formatPstHourLabel(ts)));
+
+    } else if (timeframe === '7d') {
+      // Label centered in each day span
+      const boundaries = [windowStart, ...xMajorLines, windowEnd];
+      for (let i = 0; i < boundaries.length - 1; i++) {
+        const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
+        map.set(xMid, formatPstWeekdayLabel(xMid));
+      }
+
+    } else if (timeframe === '1m') {
+      // Label AT each Monday week-start: "Mar 9", "Mar 16" …
+      xMajorLines.forEach(ts => {
+        const mon = pstMonFmt.format(new Date(ts));
+        const day = pstDayFmt.format(new Date(ts));
+        map.set(ts, `${mon} ${day}`);
+      });
+
+    } else if (timeframe === '3m' || timeframe === '1y') {
+      // Label centered in each month span: "Jan", "Feb" …
+      const boundaries = [windowStart, ...xMajorLines, windowEnd];
+      for (let i = 0; i < boundaries.length - 1; i++) {
+        const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
+        map.set(xMid, formatPstMonthLabel(xMid));
+      }
+    }
+
+    return map;
+  }, [timeframe, xMajorLines, windowStart, windowEnd]);
 
   // Build annotation plugin config
   const annotations = useMemo(() => {
     const result: Record<string, object> = {};
 
-    pstMidnightLines.forEach((ts) => {
-      const label = midnightLabelMode !== 'none'
-        ? formatMidnightLabel(ts, midnightLabelMode === 'full')
-        : undefined;
-      result[`midnight-${ts}`] = {
+    // Minor X lines — very subtle, no labels
+    xMinorLines.forEach((ts) => {
+      result[`xminor-${ts}`] = {
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: refColor,
-        borderWidth: 1.5,
-        borderDash: [4, 4],
-        borderDashOffset: 0,
-        opacity: 0.5,
-        label: label ? {
-          display: true,
-          content: label,
-          position: 'start',
-          yAdjust: 4,
-          color: axisColor,
-          font: { size: 9, weight: 'bold' as const },
-          backgroundColor: 'transparent',
-          padding: 0,
-        } : { display: false },
-      };
-    });
-
-    pstWeekStartLines.forEach((ts) => {
-      result[`week-${ts}`] = {
-        type: 'line',
-        scaleID: 'x',
-        value: ts,
-        borderColor: refColor,
+        borderColor: isDark ? 'rgba(148,163,184,0.10)' : 'rgba(15,23,42,0.06)',
         borderWidth: 1,
-        borderDash: [4, 4],
-        opacity: weekMarkerOpacity,
         label: { display: false },
       };
     });
 
-    pstMonthStartLines.forEach((ts) => {
-      result[`month-${ts}`] = {
+    // Major X lines — more visible, solid, no labels on the line itself
+    xMajorLines.forEach((ts) => {
+      result[`xmajor-${ts}`] = {
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: refColor,
-        borderWidth: 1.5,
-        borderDash: [4, 4],
-        opacity: 0.8,
-        label: {
-          display: true,
-          content: formatMidnightLabel(ts, true),
-          position: 'start',
-          yAdjust: 4,
-          color: axisColor,
-          font: { size: 9, weight: 'bold' as const },
-          backgroundColor: 'transparent',
-          padding: 0,
-        },
+        borderColor: isDark ? 'rgba(148,163,184,0.25)' : 'rgba(15,23,42,0.12)',
+        borderWidth: 1,
+        label: { display: false },
       };
     });
 
     return result;
-  }, [pstMidnightLines, pstWeekStartLines, pstMonthStartLines, midnightLabelMode, axisColor, refColor, weekMarkerOpacity]);
+  }, [xMinorLines, xMajorLines, axisColor, isDark]);
 
   // ── Chart.js data ────────────────────────────────────────────────────────────
   // Chart.js stacked bars with linear x scale need x values per dataset
@@ -232,6 +273,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
           label: '0 ETV',
           data: visibleData.map(d => ({ x: d.date, y: d.zeroEtv })),
           backgroundColor: '#ef4444',
+          hoverBackgroundColor: '#f87171',
           stack: 's',
           borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
           borderSkipped: false,
@@ -243,6 +285,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
           label: 'AFA',
           data: visibleData.map(d => ({ x: d.date, y: d.lastChance })),
           backgroundColor: '#f97316',
+          hoverBackgroundColor: '#fb923c',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -254,6 +297,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
           label: 'AI',
           data: visibleData.map(d => ({ x: d.date, y: d.ai })),
           backgroundColor: '#3b82f6',
+          hoverBackgroundColor: '#60a5fa',
           stack: 's',
           borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
           borderSkipped: false,
@@ -273,6 +317,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       responsive: true,
       maintainAspectRatio: false,
       layout: { padding: { top: 16, left: 0, right: 0, bottom: 0 } },
+      hover: { mode: 'index', intersect: false },
       scales: {
         x: {
           type: 'linear',
@@ -285,10 +330,22 @@ const PulseChart: React.FC<PulseChartProps> = ({
             color: axisColor,
             font: { size: 10, weight: 500 },
             maxRotation: 0,
-            autoSkipPadding: 48,
+            autoSkip: false,
+            // callback returns the label for ticks we injected, empty for all others
             callback(value) {
-              return formatChartTickLabel(Number(value), granularity);
+              // Find the closest key in xTickMap (within 1s tolerance for float drift)
+              const v = Number(value);
+              if (xTickMap.has(v)) return xTickMap.get(v)!;
+              // Scan for near match (midpoint ticks may have rounding)
+              for (const [k, label] of xTickMap) {
+                if (Math.abs(k - v) < 1000) return label;
+              }
+              return '';
             },
+          },
+          afterBuildTicks(axis) {
+            // Replace auto-generated ticks with exactly our desired positions
+            axis.ticks = Array.from(xTickMap.keys()).map(v => ({ value: v, label: '' }));
           },
           offset: false,
         },
@@ -296,7 +353,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
           stacked: true,
           position: 'right',
           grid: {
-            color: gridColor,
+            color: gridMajor,
+            lineWidth: 1,
             drawTicks: false,
           },
           border: { display: false, dash: [0] },
@@ -310,29 +368,27 @@ const PulseChart: React.FC<PulseChartProps> = ({
       plugins: {
         tooltip: {
           enabled: false, // use custom React tooltip
+          mode: 'index',
+          intersect: false,
           external(context: { chart: Chart; tooltip: TooltipModel<'bar'> }) {
             const { chart, tooltip: tip } = context;
             if (tip.opacity === 0) {
-              setTooltip(t => t.visible ? { ...t, visible: false } : t);
+              setTooltip(t => t.visible ? { visible: false, point: t.point } : t);
               return;
             }
             const dp = tip.dataPoints?.[0];
             if (!dp) return;
             const idx = dp.dataIndex;
             const point = visibleData[idx] ?? null;
-            const canvasRect = chart.canvas.getBoundingClientRect();
-            const containerRect = containerRef.current?.getBoundingClientRect();
-            if (!containerRect) return;
-            const x = canvasRect.left - containerRect.left + dp.element.x;
-            const y = canvasRect.top  - containerRect.top  + dp.element.y;
-            setTooltip({ visible: true, x, y, point });
+            setTooltip({ visible: true, point });
           },
         },
         legend: { display: false },
         annotation: { annotations },
       },
     };
-  }, [windowStart, windowEnd, intervalMs, axisColor, gridColor, granularity, annotations, visibleData]);
+  }, [windowStart, windowEnd, intervalMs, axisColor, gridMajor, granularity, annotations, visibleData, xTickMap]);
+
 
   const timeframeOptions: Option<Timeframe>[] = (['1d', '7d', '1m', '3m', '1y'] as Timeframe[]).map(tf => ({
     value: tf,
@@ -351,16 +407,18 @@ const PulseChart: React.FC<PulseChartProps> = ({
         })
       : `${point.fullDate} PST`;
 
-    // Keep tooltip within container bounds
+    // Default: top-right of cursor. Flip left when too close to right edge.
     const containerWidth = containerRef.current?.offsetWidth ?? 0;
-    const tooltipWidth = 160;
-    const rawX = tooltip.x;
-    const clampedX = Math.min(Math.max(rawX, tooltipWidth / 2 + 8), containerWidth - tooltipWidth / 2 - 8);
+    const tooltipWidth = 168;
+    const gap = 14;
+    const placeRight = mousePos.x + gap + tooltipWidth < containerWidth;
+    const tooltipLeft = placeRight ? mousePos.x + gap : mousePos.x - gap - tooltipWidth;
+    const tooltipTop = mousePos.y;
 
     return (
       <div
         className="absolute z-50 pointer-events-none"
-        style={{ left: clampedX, top: tooltip.y, transform: 'translate(-50%, -100%) translateY(-8px)' }}
+        style={{ left: tooltipLeft, top: tooltipTop, transform: 'translateY(-100%)' }}
       >
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-xl shadow-xl border border-slate-200/80 dark:border-slate-600/80 min-w-[160px]">
           <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-wider">{dateDisplay}</p>
@@ -466,8 +524,17 @@ const PulseChart: React.FC<PulseChartProps> = ({
       </div>
 
       {/* Chart */}
-      <div ref={containerRef} className="h-64 w-full relative" onMouseLeave={() => setTooltip(t => ({ ...t, visible: false }))}>
-        <Bar<ScatterDataPoint[]> data={chartData} options={options as ChartOptions<'bar'>} />
+      <div
+        ref={containerRef}
+        className="h-64 w-full relative"
+        onMouseMove={e => {
+          const rect = containerRef.current?.getBoundingClientRect();
+          if (!rect) return;
+          setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        }}
+        onMouseLeave={() => setTooltip(t => ({ visible: false, point: t.point }))}
+      >
+        <Bar<ScatterDataPoint[]> key={resolvedTheme} data={chartData} options={options as ChartOptions<'bar'>} />
         {renderTooltip()}
       </div>
     </section>
