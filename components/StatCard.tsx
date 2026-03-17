@@ -21,13 +21,19 @@ const StatCard: React.FC<StatCardProps> = ({
   iconColorClass 
 }) => {
   const isPositive = trend !== undefined && trend >= 0;
-  const trendColorBg = isPositive ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-rose-100 dark:bg-rose-900';
-  const trendColorText = isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300';
+  // Soften badge when value is very low (likely sparse data, not a real crash)
+  const isLowData = value <= 3 && trend !== undefined && trend <= -80;
+  const trendColorBg = isLowData
+    ? 'bg-slate-100 dark:bg-slate-700'
+    : isPositive ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-rose-100 dark:bg-rose-900';
+  const trendColorText = isLowData
+    ? 'text-slate-500 dark:text-slate-400'
+    : isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300';
   const trendIcon = isPositive ? 'arrow_upward' : 'arrow_downward';
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-40 relative overflow-hidden group transition-transform hover:-translate-y-1">
-      <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity select-none pointer-events-none">
+      <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity select-none pointer-events-none" aria-hidden="true">
         <span className={`material-symbols-outlined text-8xl ${iconColorClass}`}>{icon}</span>
       </div>
       <p className="text-slate-500 dark:text-slate-400 font-bold text-sm uppercase tracking-wider z-10">{title}</p>

@@ -45,16 +45,15 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      const fetchStart = performance.now();
       try {
         setLoading(true);
-        const fetchLabel = '[Perf] API Fetch & Parse';
-        console.time(fetchLabel);
         const data = await fetchStats();
-        console.timeEnd(fetchLabel);
+        console.log(`[Perf] API Fetch & Parse: ${(performance.now() - fetchStart).toFixed(2)} ms`);
         console.log(`[Perf] Data Size: ${data.history.length} items`);
         setRawData(data);
       } catch (err) {
-        console.timeEnd('[Perf] API Fetch & Parse');
+        console.log(`[Perf] API Fetch & Parse failed after: ${(performance.now() - fetchStart).toFixed(2)} ms`);
         setError('Failed to load stats. Please check your connection.');
       } finally {
         setLoading(false);
@@ -121,15 +120,18 @@ const App: React.FC = () => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
             {dashboardStats.updatedAt && (
-            <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
-                <span className="relative flex h-2.5 w-2.5">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
+                <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
                 </span>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                <span className="hidden sm:inline text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                 Updated {dayjs(dashboardStats.updatedAt).fromNow()}
+                </span>
+                <span className="sm:hidden text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                {dayjs(dashboardStats.updatedAt).fromNow()}
                 </span>
             </div>
             )}

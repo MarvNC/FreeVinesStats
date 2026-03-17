@@ -133,7 +133,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
       const point = payload[0].payload as ChartDataPoint;
       // For hour/15m granularities, show local time; for daily, show PST
       const showLocalTime = granularity === '1h' || granularity === '15m';
-      console.log('showLocalTime:', showLocalTime);
       const dateDisplay = showLocalTime
         ? new Date(point.date).toLocaleString('en-US', { 
             weekday: 'short', 
@@ -186,6 +185,20 @@ const PulseChart: React.FC<PulseChartProps> = ({
         <div>
           <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">The Pulse</h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Vertical lines mark midnight PST — when Amazon Vine drops launch</p>
+          <div className="flex items-center gap-4 mt-2">
+            <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="inline-block size-2.5 rounded-full bg-[#ef4444]" aria-hidden="true" />
+              0 ETV
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="inline-block size-2.5 rounded-full bg-[#f97316]" aria-hidden="true" />
+              AFA
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="inline-block size-2.5 rounded-full bg-[#3b82f6]" aria-hidden="true" />
+              AI
+            </span>
+          </div>
         </div>
         
         <SegmentedControl 
@@ -198,7 +211,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       </div>
 
       <div className="h-72 w-full mb-6">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={visibleData} margin={{ top: 10, right: 10, left: 6, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
             <XAxis 
@@ -262,7 +275,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
             max="100" 
             value={scrollPercentage} 
             onChange={(e) => setScrollPercentage(parseInt(e.target.value))}
-            className="range-slider" 
+            className="range-slider"
+            aria-label="Scroll through time range"
           />
           <span className="material-symbols-outlined text-slate-400 text-lg">schedule</span>
         </div>

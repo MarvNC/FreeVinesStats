@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { getHeatColor } from '../utils/analytics';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import HeatLegend from './HeatLegend';
 
 dayjs.extend(isoWeek);
 
@@ -44,7 +45,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Weekly Activity (Local)</h3>
       </div>
       
-      <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
+      <div className="w-full overflow-x-auto pb-2 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_20px,black_calc(100%-20px),transparent)] sm:[mask-image:none]">
         <div className="flex flex-col gap-1 w-full">
             {/* Months Header */}
             <div className="grid grid-cols-[30px_repeat(24,1fr)] gap-[3px] mb-1">
@@ -85,7 +86,10 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
                                 key={weekIndex} 
                                 onMouseEnter={(e) => !isFuture && handleMouseEnter(e, dateKey, value)}
                                 onMouseLeave={() => setHoveredCell(null)}
-                                className={`aspect-square rounded-[4px] ${finalColor} transition-colors duration-200 cursor-crosshair hover:opacity-80`}
+                                className={`aspect-square rounded-[4px] ${finalColor} transition-colors duration-200 cursor-crosshair hover:opacity-80 touch-manipulation`}
+                                title={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
+                                aria-label={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
+                                role={!isFuture ? 'img' : undefined}
                             />
                         );
                     })}
@@ -93,6 +97,8 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
             ))}
         </div>
       </div>
+
+      <HeatLegend />
 
       {/* Floating Tooltip */}
       {hoveredCell && (

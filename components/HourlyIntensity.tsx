@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getHeatColor } from '../utils/analytics';
 import SegmentedControl from './SegmentedControl';
+import HeatLegend from './HeatLegend';
 
 interface HourlyIntensityProps {
   medianData: number[][]; // 7x24
@@ -59,7 +60,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
         />
       </div>
       
-      <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
+      <div className="w-full overflow-x-auto pb-2 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_20px,black_calc(100%-20px),transparent)] sm:[mask-image:none]">
         <div className="flex flex-col gap-1 w-full">
             {/* Hours Header */}
             <div className="grid grid-cols-[30px_repeat(24,1fr)] gap-[3px] mb-1">
@@ -84,7 +85,10 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
                                 key={hour} 
                                 onMouseEnter={(e) => handleMouseEnter(e, dayName, hour, value)}
                                 onMouseLeave={() => setHoveredCell(null)}
-                                className={`aspect-square rounded-[4px] ${colorClass} transition-colors duration-200 cursor-crosshair hover:opacity-80`}
+                                className={`aspect-square rounded-[4px] ${colorClass} transition-colors duration-200 cursor-crosshair hover:opacity-80 touch-manipulation`}
+                                title={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
+                                aria-label={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
+                                role="img"
                             />
                         );
                     })}
@@ -92,6 +96,8 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
             ))}
         </div>
       </div>
+
+      <HeatLegend />
 
       {/* Floating Tooltip */}
       {hoveredCell && (
