@@ -33,35 +33,47 @@ const StatCard: React.FC<StatCardProps> = ({
     : isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300';
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-col justify-between h-36 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-      {/* Decorative background icon */}
-      <div className="absolute right-0 top-0 p-3 opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none" aria-hidden="true">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-row sm:flex-col items-center sm:items-start justify-between h-auto sm:h-36 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 gap-3 sm:gap-0">
+      
+      {/* Decorative background icon - Desktop only */}
+      <div className="absolute right-0 top-0 p-3 opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none hidden sm:block" aria-hidden="true">
         <Icon size={72} className={iconColorClass} />
       </div>
 
-      {/* Title row */}
-      <div className="flex items-center justify-between z-10">
-        <p className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-widest">{title}</p>
+      {/* Left side (Mobile) / Top side (Desktop) */}
+      <div className="flex items-center sm:items-start gap-3 sm:gap-0 z-10 flex-1 sm:flex-none">
+        <div className={`p-2 rounded-xl bg-slate-50 dark:bg-slate-700/50 sm:hidden ${iconColorClass}`}>
+          <Icon size={20} />
+        </div>
+        <div className="flex flex-col">
+          <p className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-widest">{title}</p>
+          <p className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mt-0.5 sm:hidden">
+            {subValue}
+          </p>
+        </div>
       </div>
 
-      {/* Value + trend */}
-      <div className="z-10">
-        <p className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums">
-          {value.toLocaleString()}
-        </p>
+      {/* Right side (Mobile) / Bottom side (Desktop) */}
+      <div className="flex flex-col items-end sm:items-start z-10">
+        <div className="flex items-center gap-2">
+          <p className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums leading-none">
+            {value.toLocaleString()}
+          </p>
+        </div>
+        
         <div className="flex items-center gap-2 mt-1.5">
           {trend !== undefined && (
-            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold ${trendColorBg} ${trendColorText}`}>
-              {isPositive
-                ? <ArrowUp size={11} aria-hidden="true" />
-                : <ArrowDown size={11} aria-hidden="true" />
-              }
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold ${trendColorBg} ${trendColorText}`}>
+              {isPositive ? <ArrowUp size={10} className="sm:w-[11px] sm:h-[11px]" aria-hidden="true" /> : <ArrowDown size={10} className="sm:w-[11px] sm:h-[11px]" aria-hidden="true" />}
               {Math.abs(trend)}%
             </span>
           )}
-          <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">{trendLabel || subValue}</span>
+          <span className="text-slate-400 dark:text-slate-500 text-[10px] sm:text-xs font-medium hidden sm:inline-block">
+            {trendLabel || subValue}
+          </span>
         </div>
       </div>
+      
     </div>
   );
 };

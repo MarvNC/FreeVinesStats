@@ -153,7 +153,7 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-6xl px-6 flex flex-col gap-6">
         {/* Stat Cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <StatCard 
             title="Last Hour" 
             value={dashboardStats.lastHour} 
