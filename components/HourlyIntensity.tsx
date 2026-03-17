@@ -76,7 +76,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
                     key={hour} 
                     onMouseEnter={(e) => handleMouseEnter(e, dayName, hour, value)}
                     onMouseLeave={() => setHoveredCell(null)}
-                    className={`aspect-square rounded-[3px] ${colorClass} transition-colors duration-150 cursor-crosshair hover:ring-1 hover:ring-primary/40 touch-manipulation`}
+                    className={`aspect-square rounded-[3px] ${colorClass} cursor-crosshair hover:ring-1 hover:ring-primary/40 touch-manipulation`}
                     title={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
                     aria-label={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
                     role="img"

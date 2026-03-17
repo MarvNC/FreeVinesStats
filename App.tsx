@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { Github, Activity, CloudOff, Clock, TrendingUp, Calendar } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
@@ -11,11 +11,18 @@ dayjs.extend(relativeTime);
 
 import ThemeToggle from './components/ThemeToggle';
 import StatCard from './components/StatCard';
-import PulseChart from './components/PulseChart';
-import WeeklyActivity from './components/WeeklyActivity';
-import HourlyIntensity from './components/HourlyIntensity';
 import SegmentedControl from './components/SegmentedControl';
 import useIsMobile from './hooks/useIsMobile';
+
+// Lazy-load below-the-fold heavy components
+const PulseChart    = lazy(() => import('./components/PulseChart'));
+const WeeklyActivity  = lazy(() => import('./components/WeeklyActivity'));
+const HourlyIntensity = lazy(() => import('./components/HourlyIntensity'));
+
+// Skeleton placeholder that matches the final card shape to prevent CLS
+const CardSkeleton: React.FC<{ height?: string }> = ({ height = 'h-64' }) => (
+  <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 ${height} w-full animate-pulse`} />
+);
 
 const App: React.FC = () => {
   const [rawData, setRawData] = useState<StatsData | null>(null);
@@ -33,7 +40,7 @@ const App: React.FC = () => {
       case '7d': return isMobile ? '4h' : '1h';   // ~42 vs 168 bars
       case '1m': return '1d';                     // ~30 bars
       case '3m': return '1d';                     // ~90 bars
-      case '1y': return '1d';                     // ~365 bars (handled well by recharts density)
+      case '1y': return '1d';                     // ~365 bars (handled well by chart density)
       default: return '1d';
     }
   }, [timeframe, isMobile]);
@@ -192,22 +199,28 @@ const App: React.FC = () => {
         </div>
 
         {/* Pulse Chart */}
-        <PulseChart 
-          data={chartData} 
-          granularity={granularity}
-          timeframe={timeframe} 
-          onTimeframeChange={setTimeframe} 
-        />
+        <Suspense fallback={<CardSkeleton height="h-96" />}>
+          <PulseChart 
+            data={chartData} 
+            granularity={granularity}
+            timeframe={timeframe} 
+            onTimeframeChange={setTimeframe} 
+          />
+        </Suspense>
 
         {/* Heatmaps */}
         <section className="flex flex-col gap-6 w-full">
-          <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
-          <HourlyIntensity 
-            medianData={heatMapData.hourlyMedian} 
-            meanData={heatMapData.hourlyMean}
-            maxMedian={heatMapData.maxHourlyMedian}
-            maxMean={heatMapData.maxHourlyMean}
-          />
+          <Suspense fallback={<CardSkeleton height="h-64" />}>
+            <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton height="h-64" />}>
+            <HourlyIntensity 
+              medianData={heatMapData.hourlyMedian} 
+              meanData={heatMapData.hourlyMean}
+              maxMedian={heatMapData.maxHourlyMedian}
+              maxMean={heatMapData.maxHourlyMean}
+            />
+          </Suspense>
         </section>
       </main>
 

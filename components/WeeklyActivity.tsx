@@ -76,7 +76,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
                     key={weekIndex} 
                     onMouseEnter={(e) => !isFuture && handleMouseEnter(e, dateKey, value)}
                     onMouseLeave={() => setHoveredCell(null)}
-                    className={`aspect-square rounded-[3px] ${finalColor} transition-colors duration-150 cursor-crosshair hover:ring-1 hover:ring-primary/40 touch-manipulation`}
+                    className={`aspect-square rounded-[3px] ${finalColor} cursor-crosshair hover:ring-1 hover:ring-primary/40 touch-manipulation`}
                     title={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
                     aria-label={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
                     role={!isFuture ? 'img' : undefined}

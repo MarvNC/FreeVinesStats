@@ -12,5 +12,17 @@ export default defineConfig({
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Chart.js ecosystem in its own chunk — loaded lazily with PulseChart
+            'chart': ['chart.js', 'react-chartjs-2', 'chartjs-plugin-annotation'],
+            // Day.js + plugins together
+            'dayjs': ['dayjs'],
+          },
+        },
+      },
+    },
 });
