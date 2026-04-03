@@ -24,7 +24,7 @@ const CardSkeleton: React.FC<{ height?: string }> = ({ height = 'h-64' }) => (
   <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 ${height} w-full animate-pulse`} />
 );
 
-const REFRESH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes — matches the minimum data bucket size
+const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
 
 const App: React.FC = () => {
   const [rawData, setRawData] = useState<StatsData | null>(null);
