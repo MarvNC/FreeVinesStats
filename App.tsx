@@ -37,6 +37,7 @@ const App: React.FC = () => {
   const granularity = useMemo((): Granularity => {
     switch (timeframe) {
       case '1d': return isMobile ? '30m' : '15m'; // ~48 vs 96 bars
+      case '3d': return isMobile ? '2h' : '1h';   // ~36 vs 72 bars
       case '7d': return isMobile ? '4h' : '1h';   // ~42 vs 168 bars
       case '1m': return '1d';                     // ~30 bars
       case '3m': return '1d';                     // ~90 bars
