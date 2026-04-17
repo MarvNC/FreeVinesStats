@@ -2,21 +2,21 @@
 @config "../tailwind.config.js";
 
 :root {
-  --heat-0: oklch(97% 0.01 250);
-  --heat-1: oklch(85% 0.06 255);
-  --heat-2: oklch(75% 0.10 250);
-  --heat-3: oklch(65% 0.14 240);
-  --heat-4: oklch(55% 0.18 230);
-  --heat-5: oklch(48% 0.20 210);
+  --heat-0: oklch(96% 0.02 250);
+  --heat-1: oklch(88% 0.08 260);
+  --heat-2: oklch(80% 0.14 270);
+  --heat-3: oklch(70% 0.20 280);
+  --heat-4: oklch(60% 0.26 290);
+  --heat-5: oklch(55% 0.30 310);
 }
 
 .dark {
-  --heat-0: oklch(20% 0.02 250);
-  --heat-1: oklch(30% 0.07 255);
-  --heat-2: oklch(40% 0.11 250);
-  --heat-3: oklch(50% 0.15 240);
-  --heat-4: oklch(60% 0.17 230);
-  --heat-5: oklch(70% 0.19 210);
+  --heat-0: oklch(22% 0.03 250);
+  --heat-1: oklch(35% 0.09 260);
+  --heat-2: oklch(48% 0.15 270);
+  --heat-3: oklch(60% 0.20 280);
+  --heat-4: oklch(70% 0.25 290);
+  --heat-5: oklch(80% 0.30 310);
 }
 
 @keyframes pop {

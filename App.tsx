@@ -211,18 +211,17 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-6xl px-6 flex flex-col gap-6">
         {/* Stat Cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="sm:col-span-2 h-full animate-slide-up stagger-1">
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="h-full">
             <StatCard 
               title="Last Hour" 
               value={dashboardStats.lastHour} 
               subValue="New Items" 
               icon={Clock}
               iconColorClass="text-primary"
-              variant="hero"
             />
           </div>
-          <div className="sm:col-span-1 h-full animate-slide-up stagger-2">
+          <div className="h-full">
             <StatCard 
               title="Today (PST)" 
               value={dashboardStats.today} 
@@ -231,10 +230,9 @@ const App: React.FC = () => {
               trendLabel="vs Median"
               icon={TrendingUp}
               iconColorClass="text-emerald-500"
-              variant="compact"
             />
           </div>
-          <div className="sm:col-span-1 h-full animate-slide-up stagger-3">
+          <div className="h-full">
             <StatCard 
               title="This Week (PST)" 
               value={dashboardStats.thisWeek} 
@@ -243,13 +241,12 @@ const App: React.FC = () => {
               trendLabel="vs Median"
               icon={Calendar}
               iconColorClass="text-violet-500"
-              variant="compact"
             />
           </div>
         </section>
 
         {/* Data filter */}
-        <div className="flex justify-center w-full animate-slide-up stagger-4">
+        <div className="flex justify-center w-full mt-2">
           <div className="bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
             <SegmentedControl 
               options={[
@@ -276,7 +273,7 @@ const App: React.FC = () => {
 
         {/* Pulse Chart */}
         <Suspense fallback={<CardSkeleton height="h-96" />}>
-          <div className="animate-slide-up stagger-5">
+          <div>
             <PulseChart 
               data={chartData} 
               granularity={granularity}
@@ -287,7 +284,7 @@ const App: React.FC = () => {
         </Suspense>
 
         {/* Heatmaps */}
-        <section className="flex flex-col gap-6 w-full animate-slide-up stagger-5">
+        <section className="flex flex-col gap-6 w-full">
           <Suspense fallback={<CardSkeleton height="h-64" />}>
             <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
           </Suspense>

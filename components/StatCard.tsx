@@ -11,7 +11,6 @@ interface StatCardProps {
   icon: LucideIcon;
   iconColorClass: string;
   trendReverse?: boolean; // if true, positive is bad (not used here but good for future)
-  variant?: 'default' | 'hero' | 'compact';
 }
 
 const StatCard: React.FC<StatCardProps> = ({ 
@@ -21,8 +20,7 @@ const StatCard: React.FC<StatCardProps> = ({
   trend, 
   trendLabel, 
   icon: Icon, 
-  iconColorClass,
-  variant = 'default'
+  iconColorClass
 }) => {
   const isPositive = trend !== undefined && trend >= 0;
   // Soften badge when data is too sparse for a meaningful trend
@@ -55,51 +53,48 @@ const StatCard: React.FC<StatCardProps> = ({
     prevValueRef.current = value;
   }, [value]);
 
-  const isHero = variant === 'hero';
-
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-2xl ${isHero ? 'p-6 sm:p-8' : 'p-4 sm:p-5'} shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-row sm:flex-col items-center sm:items-start justify-between h-auto ${isHero ? 'sm:h-48' : 'sm:h-36'} relative overflow-hidden group hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.2)] hover:-translate-y-0.5 transition-all duration-200 gap-3 sm:gap-0`}>
+    <div className={`bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-col justify-between h-full relative overflow-hidden group hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.2)] hover:-translate-y-0.5 transition-all duration-200 gap-4 min-h-[140px]`}>
       
       {/* Decorative background icon - Desktop only */}
-      <div className={`absolute right-0 top-0 ${isHero ? 'p-4' : 'p-3'} opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none hidden sm:block`} aria-hidden="true">
-        <Icon size={isHero ? 112 : 72} className={iconColorClass} />
+      <div className={`absolute right-0 top-0 p-3 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity select-none pointer-events-none hidden sm:block`} aria-hidden="true">
+        <Icon size={80} className={iconColorClass} />
       </div>
 
-      {/* Left side (Mobile) / Top side (Desktop) */}
-      <div className="flex items-center sm:items-start gap-3 sm:gap-0 z-10 flex-1 sm:flex-none">
-        <div className={`p-2 rounded-xl bg-slate-50 dark:bg-slate-700/50 sm:hidden ${iconColorClass}`}>
-          <Icon size={isHero ? 24 : 20} />
-        </div>
+      <div className="flex items-center justify-between z-10">
         <div className="flex flex-col">
-          <p className={`text-slate-500 dark:text-slate-400 font-semibold ${isHero ? 'text-sm' : 'text-xs'} uppercase tracking-widest`}>{title}</p>
-          <p className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mt-0.5 sm:hidden">
-            {subValue}
-          </p>
+          <p className={`text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-widest`}>{title}</p>
+        </div>
+        <div className={`p-2 rounded-xl bg-slate-50 dark:bg-slate-700/50 ${iconColorClass}`}>
+          <Icon size={18} />
         </div>
       </div>
 
-      {/* Right side (Mobile) / Bottom side (Desktop) */}
-      <div className="flex flex-col items-end sm:items-start z-10">
+      <div className="flex flex-col items-start z-10 mt-2">
         <div className="flex items-center gap-2">
-          <p className={`${isHero ? 'text-4xl sm:text-6xl' : 'text-2xl sm:text-4xl'} font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums leading-none ${animate ? 'animate-pop' : ''}`}>
+          <p className={`text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums leading-none font-display ${animate ? 'animate-pop' : ''}`}>
             {value.toLocaleString()}
           </p>
         </div>
         
-        <div className="flex items-center gap-2 mt-1.5">
-          {trend !== undefined && (
-            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold ${trendColorBg} ${trendColorText}`}>
+        <div className="flex items-center gap-2 mt-2">
+          {trend !== undefined ? (
+            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold ${trendColorBg} ${trendColorText}`}>
               {trend >= 100 ? (
-                <Flame size={10} className="sm:w-[11px] sm:h-[11px] text-orange-600 dark:text-orange-400" aria-hidden="true" />
+                <Flame size={12} className="text-orange-600 dark:text-orange-400" aria-hidden="true" />
               ) : isPositive ? (
-                <ArrowUp size={10} className="sm:w-[11px] sm:h-[11px]" aria-hidden="true" />
+                <ArrowUp size={12} aria-hidden="true" />
               ) : (
-                <ArrowDown size={10} className="sm:w-[11px] sm:h-[11px]" aria-hidden="true" />
+                <ArrowDown size={12} aria-hidden="true" />
               )}
               {Math.abs(trend)}%
             </span>
+          ) : (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+              New Items
+            </span>
           )}
-          <span className="text-slate-400 dark:text-slate-500 text-[10px] sm:text-xs font-medium hidden sm:inline-block">
+          <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">
             {trendLabel || subValue}
           </span>
         </div>
