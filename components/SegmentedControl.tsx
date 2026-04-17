@@ -4,6 +4,7 @@ export interface Option<T extends string | number> {
   value: T;
   label: string;
   disabled?: boolean;
+  keyboardHint?: string;
 }
 
 interface SegmentedControlProps<T extends string | number> {
@@ -51,10 +52,15 @@ const SegmentedControl = <T extends string | number>({
               disabled={isDisabled}
             />
             <div className={`
-              px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 text-center uppercase min-w-[3rem] whitespace-nowrap select-none tracking-wide
+              px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 text-center uppercase min-w-[3rem] whitespace-nowrap select-none tracking-wide flex items-center justify-center gap-1.5
               ${isSelected ? activeClass : inactiveClass}
             `}>
               {option.label}
+              {option.keyboardHint && (
+                <span className={`inline-flex items-center justify-center rounded text-[10px] px-1 font-semibold tabular-nums opacity-60`}>
+                  {option.keyboardHint}
+                </span>
+              )}
             </div>
           </label>
         );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, lazy, Suspense, useCallback } from 'react';
-import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar, RefreshCw } from 'lucide-react';
+import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar, RefreshCw, HelpCircle, X } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -34,6 +34,7 @@ const App: React.FC = () => {
   
   const [timeframe, setTimeframe] = useState<Timeframe>('1d');
   const [dataFilter, setDataFilter] = useState<DataFilter>('all');
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const isMobile = useIsMobile();
   const [, setTheme, theme] = useDarkMode();
 
@@ -94,6 +95,13 @@ const App: React.FC = () => {
         if (theme === 'system') setTheme('light');
         else if (theme === 'light') setTheme('dark');
         else setTheme('system');
+      }
+      if (key === '?') {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+      if (key === 'escape') {
+        setShowShortcuts(false);
       }
     };
     
@@ -189,38 +197,55 @@ const App: React.FC = () => {
               </button>
             </>
           )}
+          <button 
+            onClick={() => setShowShortcuts(true)}
+            className="flex items-center justify-center h-8 w-8 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            aria-label="Keyboard Shortcuts (?)"
+            title="Keyboard Shortcuts (?)"
+          >
+            <HelpCircle size={14} className="text-slate-500 dark:text-slate-400" />
+          </button>
           <ThemeToggle />
         </div>
       </header>
 
       <main className="w-full max-w-6xl px-6 flex flex-col gap-6">
         {/* Stat Cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <StatCard 
-            title="Last Hour" 
-            value={dashboardStats.lastHour} 
-            subValue="New Items" 
-            icon={Clock}
-            iconColorClass="text-primary"
-          />
-          <StatCard 
-            title="Today (PST)" 
-            value={dashboardStats.today} 
-            subValue={`vs Median (${dashboardStats.todayMedian})`}
-            trend={dashboardStats.todayGrowth}
-            trendLabel="vs Median"
-            icon={TrendingUp}
-            iconColorClass="text-emerald-500"
-          />
-          <StatCard 
-            title="This Week (PST)" 
-            value={dashboardStats.thisWeek} 
-            subValue={`vs Median (${dashboardStats.weekMedian})`}
-            trend={dashboardStats.weekGrowth}
-            trendLabel="vs Median"
-            icon={Calendar}
-            iconColorClass="text-violet-500"
-          />
+        <section className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="sm:col-span-2 h-full">
+            <StatCard 
+              title="Last Hour" 
+              value={dashboardStats.lastHour} 
+              subValue="New Items" 
+              icon={Clock}
+              iconColorClass="text-primary"
+              variant="hero"
+            />
+          </div>
+          <div className="sm:col-span-1 h-full">
+            <StatCard 
+              title="Today (PST)" 
+              value={dashboardStats.today} 
+              subValue={`vs Median (${dashboardStats.todayMedian})`}
+              trend={dashboardStats.todayGrowth}
+              trendLabel="vs Median"
+              icon={TrendingUp}
+              iconColorClass="text-emerald-500"
+              variant="compact"
+            />
+          </div>
+          <div className="sm:col-span-1 h-full">
+            <StatCard 
+              title="This Week (PST)" 
+              value={dashboardStats.thisWeek} 
+              subValue={`vs Median (${dashboardStats.weekMedian})`}
+              trend={dashboardStats.weekGrowth}
+              trendLabel="vs Median"
+              icon={Calendar}
+              iconColorClass="text-violet-500"
+              variant="compact"
+            />
+          </div>
         </section>
 
         {/* Data filter */}
@@ -284,6 +309,60 @@ const App: React.FC = () => {
           if you enjoy this data.
         </p>
       </footer>
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcuts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={() => setShowShortcuts(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700/80">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <HelpCircle size={20} className="text-primary" />
+                Keyboard Shortcuts
+              </h2>
+              <button 
+                onClick={() => setShowShortcuts(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-[1fr_auto] gap-4 gap-y-6 text-sm">
+                <div className="text-slate-600 dark:text-slate-300 font-medium">Select timeframe (1D to 1Y)</div>
+                <div className="flex gap-1.5 justify-end font-semibold tabular-nums">
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 min-w-[1.5rem] h-6 shadow-sm text-slate-700 dark:text-slate-200">1</kbd>
+                  <span className="text-slate-400 self-center">...</span>
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 min-w-[1.5rem] h-6 shadow-sm text-slate-700 dark:text-slate-200">6</kbd>
+                </div>
+
+                <div className="text-slate-600 dark:text-slate-300 font-medium">Refresh data</div>
+                <div className="flex justify-end font-semibold">
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 min-w-[1.5rem] h-6 shadow-sm text-slate-700 dark:text-slate-200 uppercase">R</kbd>
+                </div>
+
+                <div className="text-slate-600 dark:text-slate-300 font-medium">Toggle dark mode</div>
+                <div className="flex justify-end font-semibold">
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 min-w-[1.5rem] h-6 shadow-sm text-slate-700 dark:text-slate-200 uppercase">D</kbd>
+                </div>
+
+                <div className="text-slate-600 dark:text-slate-300 font-medium">Show shortcuts</div>
+                <div className="flex justify-end font-semibold">
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-2 min-w-[1.5rem] h-6 shadow-sm text-slate-700 dark:text-slate-200">?</kbd>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border-t border-slate-100 dark:border-slate-700/80 text-center">
+              <button 
+                onClick={() => setShowShortcuts(false)}
+                className="px-6 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold text-sm transition-colors shadow-sm"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

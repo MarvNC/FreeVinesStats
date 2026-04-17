@@ -390,9 +390,10 @@ const PulseChart: React.FC<PulseChartProps> = ({
   }, [windowStart, windowEnd, intervalMs, axisColor, gridMajor, granularity, annotations, visibleData, xTickMap]);
 
 
-  const timeframeOptions: Option<Timeframe>[] = (['1d', '3d', '7d', '1m', '3m', '1y'] as Timeframe[]).map(tf => ({
+  const timeframeOptions: Option<Timeframe>[] = (['1d', '3d', '7d', '1m', '3m', '1y'] as Timeframe[]).map((tf, i) => ({
     value: tf,
     label: tf,
+    keyboardHint: String(i + 1),
   }));
 
   // ── Custom tooltip renderer ─────────────────────────────────────────────────
@@ -422,7 +423,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       >
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-xl shadow-xl border border-slate-200/80 dark:border-slate-600/80 min-w-[160px]">
           <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-wider">{dateDisplay}</p>
-          <p className="text-base font-extrabold text-slate-900 dark:text-white font-mono mb-2">
+          <p className="text-base font-extrabold text-slate-900 dark:text-white tabular-nums mb-2">
             {point.total.toLocaleString()} <span className="text-xs text-slate-400 font-normal">total</span>
           </p>
           <div className="flex flex-col gap-1">
@@ -472,7 +473,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
                 </button>
               </div>
 
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums min-w-0 truncate font-mono">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums min-w-0 truncate">
                 {windowLabel}
               </span>
 

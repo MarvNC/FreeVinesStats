@@ -34,7 +34,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 p-5 sm:p-6 flex flex-col w-full overflow-visible relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white font-display">Hourly Intensity</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">Hourly Intensity</h3>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
             Local timezone · {mode === 'median' ? 'median' : 'mean'} drops per hour
           </p>

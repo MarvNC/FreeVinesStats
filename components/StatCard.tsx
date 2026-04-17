@@ -11,6 +11,7 @@ interface StatCardProps {
   icon: LucideIcon;
   iconColorClass: string;
   trendReverse?: boolean; // if true, positive is bad (not used here but good for future)
+  variant?: 'default' | 'hero' | 'compact';
 }
 
 const StatCard: React.FC<StatCardProps> = ({ 
@@ -20,7 +21,8 @@ const StatCard: React.FC<StatCardProps> = ({
   trend, 
   trendLabel, 
   icon: Icon, 
-  iconColorClass 
+  iconColorClass,
+  variant = 'default'
 }) => {
   const isPositive = trend !== undefined && trend >= 0;
   // Soften badge when data is too sparse for a meaningful trend
@@ -32,21 +34,39 @@ const StatCard: React.FC<StatCardProps> = ({
     ? 'text-slate-400 dark:text-slate-500'
     : isPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300';
 
+  const prevValueRef = React.useRef(value);
+  const [animate, setAnimate] = React.useState(false);
+
+  React.useEffect(() => {
+    const prev = prevValueRef.current;
+    if (prev > 0) {
+      const diff = Math.abs(value - prev) / prev;
+      if (diff > 0.05) {
+        setAnimate(true);
+        const timer = setTimeout(() => setAnimate(false), 300);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevValueRef.current = value;
+  }, [value]);
+
+  const isHero = variant === 'hero';
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-row sm:flex-col items-center sm:items-start justify-between h-auto sm:h-36 relative overflow-hidden group hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.2)] hover:-translate-y-0.5 transition-all duration-200 gap-3 sm:gap-0">
+    <div className={`bg-white dark:bg-slate-800 rounded-2xl ${isHero ? 'p-6 sm:p-8' : 'p-4 sm:p-5'} shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-row sm:flex-col items-center sm:items-start justify-between h-auto ${isHero ? 'sm:h-48' : 'sm:h-36'} relative overflow-hidden group hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.2)] hover:-translate-y-0.5 transition-all duration-200 gap-3 sm:gap-0`}>
       
       {/* Decorative background icon - Desktop only */}
-      <div className="absolute right-0 top-0 p-3 opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none hidden sm:block" aria-hidden="true">
-        <Icon size={72} className={iconColorClass} />
+      <div className={`absolute right-0 top-0 ${isHero ? 'p-4' : 'p-3'} opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none hidden sm:block`} aria-hidden="true">
+        <Icon size={isHero ? 112 : 72} className={iconColorClass} />
       </div>
 
       {/* Left side (Mobile) / Top side (Desktop) */}
       <div className="flex items-center sm:items-start gap-3 sm:gap-0 z-10 flex-1 sm:flex-none">
         <div className={`p-2 rounded-xl bg-slate-50 dark:bg-slate-700/50 sm:hidden ${iconColorClass}`}>
-          <Icon size={20} />
+          <Icon size={isHero ? 24 : 20} />
         </div>
         <div className="flex flex-col">
-          <p className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-widest font-display">{title}</p>
+          <p className={`text-slate-500 dark:text-slate-400 font-semibold ${isHero ? 'text-sm' : 'text-xs'} uppercase tracking-widest`}>{title}</p>
           <p className="text-slate-400 dark:text-slate-500 text-[10px] font-medium mt-0.5 sm:hidden">
             {subValue}
           </p>
@@ -56,7 +76,7 @@ const StatCard: React.FC<StatCardProps> = ({
       {/* Right side (Mobile) / Bottom side (Desktop) */}
       <div className="flex flex-col items-end sm:items-start z-10">
         <div className="flex items-center gap-2">
-          <p key={value} className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums leading-none animate-pop">
+          <p className={`${isHero ? 'text-4xl sm:text-6xl' : 'text-2xl sm:text-4xl'} font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums leading-none ${animate ? 'animate-pop' : ''}`}>
             {value.toLocaleString()}
           </p>
         </div>
