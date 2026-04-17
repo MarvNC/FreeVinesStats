@@ -61,7 +61,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
           <div className="grid grid-cols-[24px_repeat(24,1fr)] gap-[2px] mb-1">
             <div />
             {hours.map((h) => (
-              <div key={h} className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-center">
+              <div key={h} className="text-[8px] text-stone-400 dark:text-stone-500 font-bold text-center">
                 {h % 4 === 0 || h === 23 ? String(h).padStart(2, '0') : ''}
               </div>
             ))}
@@ -70,7 +70,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
           {/* Day rows */}
           {daysOfWeek.map((dayName, dayIndex) => (
             <div key={dayName} className="grid grid-cols-[24px_repeat(24,1fr)] gap-[2px] items-center">
-              <div className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-right pr-1.5 tracking-tighter">{dayName}</div>
+              <div className="text-[8px] text-stone-400 dark:text-stone-500 font-bold text-right pr-1.5 tracking-tighter">{dayName}</div>
               {hours.map((hour) => {
                 const value      = currentData[dayIndex]?.[hour] ?? 0;
                 const colorClass = getHeatColor(value, currentMax);
@@ -100,8 +100,8 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
       </div>
 
       {hoveredCell && (
-        <div 
-          className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl text-xs font-bold whitespace-nowrap rounded-none border border-slate-700 dark:border-slate-300"
+        <div
+          className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-stone-900/95 dark:bg-stone-100/95 text-stone-100 dark:text-stone-900 shadow-xl text-xs font-bold whitespace-nowrap rounded-lg border border-stone-700 dark:border-stone-300"
           style={{ left: hoveredCell.x, top: hoveredCell.y }}
         >
           <div className="opacity-60 text-[10px] mb-0.5">{hoveredCell.day} · {String(hoveredCell.hour).padStart(2, '0')}:00</div>

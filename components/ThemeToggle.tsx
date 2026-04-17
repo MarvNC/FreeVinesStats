@@ -17,7 +17,7 @@ export default function ThemeToggle() {
 
   const getIcon = () => {
     switch (theme) {
-      case 'system': return <Monitor size={16} className="text-slate-500 dark:text-slate-400" />;
+      case 'system': return <Monitor size={16} className="text-stone-500 dark:text-stone-400" />;
       case 'light':  return <Sun size={16} className="text-amber-500" />;
       case 'dark':   return <Moon size={16} className="text-indigo-400" />;
     }
@@ -34,7 +34,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={handleToggle}
-      className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+      className="flex items-center gap-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white transition-colors"
       aria-label={`Current theme: ${getLabel()}. Click to toggle.`}
       title="Toggle theme (System → Light → Dark)"
     >

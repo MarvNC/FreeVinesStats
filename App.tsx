@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, lazy, Suspense, useCallback } from 'react';
-import { Github, CloudOff, Clock, TrendingUp, Calendar, RefreshCw, HelpCircle, X, Info } from 'lucide-react';
+import { Github, CloudOff, RefreshCw, HelpCircle, X, Info, Sprout } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -21,7 +21,7 @@ const WeeklyActivity  = lazy(() => import('./components/WeeklyActivity'));
 const HourlyIntensity = lazy(() => import('./components/HourlyIntensity'));
 
 const CardSkeleton: React.FC<{ height?: string }> = ({ height = 'h-64' }) => (
-  <div className={`border border-slate-300 dark:border-slate-700 ${height} w-full animate-pulse opacity-50`} />
+  <div className={`border border-stone-300 dark:border-stone-700 ${height} w-full animate-pulse opacity-50`} />
 );
 
 const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
@@ -167,15 +167,12 @@ const App: React.FC = () => {
       <div className="w-full border-b border-stone-200 dark:border-stone-800 bg-background-light dark:bg-background-dark relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
           <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-4">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-stone-800 dark:text-stone-100">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-display">
-                  FreeVinesStats
-                </h1>
-              </div>
-              <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
-                Drop tracking for Vine hunters
-              </p>
+            <div className="flex items-center gap-2.5 text-stone-800 dark:text-stone-100">
+              <Sprout size={22} className="text-primary" strokeWidth={2.5} />
+              <h1 className="text-2xl sm:text-3xl tracking-tight font-display">
+                <span className="font-bold">FreeVines</span>
+                <span className="font-light">Stats</span>
+              </h1>
             </div>
 
             <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-sm font-medium text-stone-500 dark:text-stone-400">
@@ -208,37 +205,34 @@ const App: React.FC = () => {
       </div>
 
       <main className="w-full flex flex-col relative z-10">
-        {/* Ticker Zone */}
+        {/* Stats Zone */}
         <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800">
-              <div className="py-5 sm:py-6 sm:px-6">
-                <StatCard 
-                  title="Last Hour" 
-                  value={dashboardStats.lastHour} 
-                  subValue="New Items" 
-                  icon={Clock}
-                  iconColorClass="text-primary"
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-0 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800">
+              <div className="sm:px-8">
+                <StatCard
+                  title="Last Hour"
+                  value={dashboardStats.lastHour}
+                  subValue="New items"
+                  numberColor="#a2495c"
                 />
               </div>
-              <div className="py-5 sm:py-6 sm:px-6">
-                <StatCard 
-                  title="Today" 
-                  value={dashboardStats.today} 
-                  subValue={`vs Median (${dashboardStats.todayMedian})`}
+              <div className="pt-8 sm:pt-0 sm:px-8">
+                <StatCard
+                  title="Today"
+                  value={dashboardStats.today}
+                  subValue={`Median: ${dashboardStats.todayMedian}`}
                   trend={dashboardStats.todayGrowth}
-                  icon={TrendingUp}
-                  iconColorClass="text-emerald-500"
+                  numberColor="#c9a96e"
                 />
               </div>
-              <div className="py-5 sm:py-6 sm:px-6">
-                <StatCard 
-                  title="This Week" 
-                  value={dashboardStats.thisWeek} 
-                  subValue={`vs Median (${dashboardStats.weekMedian})`}
+              <div className="pt-8 sm:pt-0 sm:px-8">
+                <StatCard
+                  title="This Week"
+                  value={dashboardStats.thisWeek}
+                  subValue={`Median: ${dashboardStats.weekMedian}`}
                   trend={dashboardStats.weekGrowth}
-                  icon={Calendar}
-                  iconColorClass="text-violet-500"
+                  numberColor="#6b8f71"
                 />
               </div>
             </div>
@@ -306,73 +300,75 @@ const App: React.FC = () => {
         </section>
       </main>
 
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-        <footer className="w-full pt-16 pb-8 flex flex-col items-center justify-center gap-4 text-center text-stone-500 dark:text-stone-400 text-sm font-medium">
-          <a 
-            href="https://github.com/MarvNC/FreeVinesStats" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="flex items-center gap-2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
-            aria-label="View source on GitHub"
-          >
-            <Github size={16} />
-            <span>Source // by MarvNC</span>
-          </a>
-          <p className="opacity-60 max-w-sm leading-relaxed mt-2">
-            Tracking data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
-            <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VineHelper</a> if you enjoy this data.
-          </p>
-        </footer>
+      <div className="w-full bg-background-light dark:bg-background-dark border-t border-stone-200 dark:border-stone-800 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <footer className="w-full pt-10 pb-8 flex flex-col items-center justify-center gap-4 text-center text-stone-500 dark:text-stone-400 text-sm font-medium">
+            <a
+              href="https://github.com/MarvNC/FreeVinesStats"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+              aria-label="View source on GitHub"
+            >
+              <Github size={16} />
+              <span>Source // by MarvNC</span>
+            </a>
+            <p className="opacity-60 max-w-sm leading-relaxed mt-2">
+              Tracking data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
+              <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VineHelper</a> if you enjoy this data.
+            </p>
+          </footer>
+        </div>
       </div>
 
       {/* Keyboard Shortcuts Modal */}
       {showShortcuts && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-opacity" onClick={() => setShowShortcuts(false)}>
-          <div className="bg-white dark:bg-slate-900 rounded-none border-2 border-slate-900 dark:border-white w-full max-w-md overflow-hidden animate-fade-in animate-zoom-in-95 font-mono" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b-2 border-slate-900 dark:border-white bg-slate-100 dark:bg-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <HelpCircle size={16} className="text-primary" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md transition-opacity" onClick={() => setShowShortcuts(false)} aria-modal="true" role="dialog">
+          <div className="bg-background-light dark:bg-background-dark rounded-lg border border-stone-200 dark:border-stone-800 shadow-soft w-full max-w-md overflow-hidden animate-fade-in animate-zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-stone-200 dark:border-stone-800">
+              <h2 className="text-sm font-bold text-primary flex items-center gap-2 font-sans">
+                <HelpCircle size={16} />
                 Keyboard Shortcuts
               </h2>
-              <button 
+              <button
                 onClick={() => setShowShortcuts(false)}
-                className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                 aria-label="Close modal"
               >
                 <X size={20} />
               </button>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-[1fr_auto] gap-4 gap-y-6 text-xs font-bold">
-                <div className="text-slate-600 dark:text-slate-400">Set timeframe (1d to 1y)</div>
-                <div className="flex gap-1.5 justify-end font-bold tabular-nums">
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">1</kbd>
-                  <span className="text-slate-400 self-center">...</span>
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">6</kbd>
+              <div className="grid grid-cols-[1fr_auto] gap-4 gap-y-5 text-xs font-medium font-sans">
+                <div className="text-stone-600 dark:text-stone-400">Set timeframe (1d to 1y)</div>
+                <div className="flex gap-1.5 justify-end font-medium tabular-nums">
+                  <kbd className="flex items-center justify-center bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md px-2 min-w-[1.5rem] h-6 text-stone-900 dark:text-stone-100">1</kbd>
+                  <span className="text-stone-400 self-center">...</span>
+                  <kbd className="flex items-center justify-center bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md px-2 min-w-[1.5rem] h-6 text-stone-900 dark:text-stone-100">6</kbd>
                 </div>
 
-                <div className="text-slate-600 dark:text-slate-400">Force refresh</div>
-                <div className="flex justify-end font-bold">
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">R</kbd>
+                <div className="text-stone-600 dark:text-stone-400">Force refresh</div>
+                <div className="flex justify-end font-medium">
+                  <kbd className="flex items-center justify-center bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md px-2 min-w-[1.5rem] h-6 text-stone-900 dark:text-stone-100">R</kbd>
                 </div>
 
-                <div className="text-slate-600 dark:text-slate-400">Toggle theme</div>
-                <div className="flex justify-end font-bold">
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">D</kbd>
+                <div className="text-stone-600 dark:text-stone-400">Toggle theme</div>
+                <div className="flex justify-end font-medium">
+                  <kbd className="flex items-center justify-center bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md px-2 min-w-[1.5rem] h-6 text-stone-900 dark:text-stone-100">D</kbd>
                 </div>
 
-                <div className="text-slate-600 dark:text-slate-400">Toggle help</div>
-                <div className="flex justify-end font-bold">
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">?</kbd>
+                <div className="text-stone-600 dark:text-stone-400">Toggle help</div>
+                <div className="flex justify-end font-medium">
+                  <kbd className="flex items-center justify-center bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-md px-2 min-w-[1.5rem] h-6 text-stone-900 dark:text-stone-100">?</kbd>
                 </div>
               </div>
             </div>
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 border-t-2 border-slate-900 dark:border-white text-center">
-              <button 
+            <div className="p-4 border-t border-stone-200 dark:border-stone-800 text-center">
+              <button
                 onClick={() => setShowShortcuts(false)}
-                className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[11px] transition-opacity hover:opacity-90"
+                className="w-full py-2.5 bg-primary text-white font-medium text-sm rounded-lg transition-opacity hover:opacity-90"
               >
-                Acknowledge
+                Got it
               </button>
             </div>
           </div>

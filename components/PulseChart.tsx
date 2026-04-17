@@ -372,7 +372,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         className="absolute z-50 pointer-events-none"
         style={{ left: tooltipLeft, top: tooltipTop, transform: 'translateY(-100%)' }}
       >
-        <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-3 rounded-none shadow-xl border border-slate-700 dark:border-slate-300 min-w-[160px] font-mono">
+        <div className="bg-stone-900/95 dark:bg-stone-100/95 text-stone-100 dark:text-stone-900 p-3 rounded-lg shadow-xl border border-stone-700 dark:border-stone-300 min-w-[160px]">
           <p className="text-[10px] font-bold opacity-60 mb-1.5">{dateDisplay}</p>
           <p className="text-base font-extrabold tabular-nums mb-2">
             {point.total.toLocaleString()} <span className="text-xs font-normal opacity-60">Total</span>
@@ -426,7 +426,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={stepBack}
               disabled={!canStepBack}
               aria-label="Previous period"
-              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-none text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center h-8 w-8 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
@@ -434,7 +434,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={goLive}
               disabled={isLive}
               aria-label="Jump to current period"
-              className="flex items-center justify-center h-8 px-4 border-y border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center h-8 px-4 border-y border-stone-300 dark:border-stone-700 text-xs font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
             >
               Today
             </button>
@@ -442,7 +442,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={stepForward}
               disabled={!canStepForward}
               aria-label="Next period"
-              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-none text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center h-8 w-8 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={16} />
             </button>
