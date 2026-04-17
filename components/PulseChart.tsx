@@ -34,8 +34,8 @@ import useDarkMode from '../hooks/useDarkMode';
 // Register only what we need — no pie, sankey, treemap, etc.
 Chart.register(BarController, BarElement, LinearScale, ChartTooltip, annotationPlugin);
 
-// Match site typography (Inter loaded via CSS)
-Chart.defaults.font.family = "'Inter', sans-serif";
+// Match site typography (Plus Jakarta Sans loaded via CSS)
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
 interface PulseChartProps {
   data: ChartDataPoint[];
@@ -505,6 +505,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               </span>
             ))}
           </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">All times in PST (Pacific)</p>
         </div>
 
         <div className="flex-shrink-0">

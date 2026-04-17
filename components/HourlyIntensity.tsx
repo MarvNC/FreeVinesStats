@@ -36,7 +36,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">Hourly Intensity</h3>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-            Local timezone · {mode === 'median' ? 'median' : 'mean'} drops per hour
+            PST (Pacific) · {mode === 'median' ? 'median' : 'mean'} drops per hour
           </p>
         </div>
         <SegmentedControl 

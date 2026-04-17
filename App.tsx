@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, lazy, Suspense, useCallback } from 'react';
-import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar, RefreshCw, HelpCircle, X } from 'lucide-react';
+import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar, RefreshCw, HelpCircle, X, Info } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -212,7 +212,7 @@ const App: React.FC = () => {
       <main className="w-full max-w-6xl px-6 flex flex-col gap-6">
         {/* Stat Cards */}
         <section className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="sm:col-span-2 h-full">
+          <div className="sm:col-span-2 h-full animate-slide-up stagger-1">
             <StatCard 
               title="Last Hour" 
               value={dashboardStats.lastHour} 
@@ -222,7 +222,7 @@ const App: React.FC = () => {
               variant="hero"
             />
           </div>
-          <div className="sm:col-span-1 h-full">
+          <div className="sm:col-span-1 h-full animate-slide-up stagger-2">
             <StatCard 
               title="Today (PST)" 
               value={dashboardStats.today} 
@@ -234,7 +234,7 @@ const App: React.FC = () => {
               variant="compact"
             />
           </div>
-          <div className="sm:col-span-1 h-full">
+          <div className="sm:col-span-1 h-full animate-slide-up stagger-3">
             <StatCard 
               title="This Week (PST)" 
               value={dashboardStats.thisWeek} 
@@ -249,7 +249,7 @@ const App: React.FC = () => {
         </section>
 
         {/* Data filter */}
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full animate-slide-up stagger-4">
           <div className="bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
             <SegmentedControl 
               options={[
@@ -263,20 +263,31 @@ const App: React.FC = () => {
               variant="flat"
             />
           </div>
+          <div className="relative group ml-2 self-center">
+            <Info size={16} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help transition-colors" />
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+              <p className="font-semibold mb-1">Vine Jargon Guide:</p>
+              <p><span className="font-medium">0 ETV</span> = $0 estimated tax value (free items)</p>
+              <p className="mt-1"><span className="font-medium">AFA</span> = Amazon Fulfilled (last chance items)</p>
+              <p className="mt-1"><span className="font-medium">AI</span> = AI-suggested items</p>
+            </div>
+          </div>
         </div>
 
         {/* Pulse Chart */}
         <Suspense fallback={<CardSkeleton height="h-96" />}>
-          <PulseChart 
-            data={chartData} 
-            granularity={granularity}
-            timeframe={timeframe} 
-            onTimeframeChange={setTimeframe} 
-          />
+          <div className="animate-slide-up stagger-5">
+            <PulseChart 
+              data={chartData} 
+              granularity={granularity}
+              timeframe={timeframe} 
+              onTimeframeChange={setTimeframe} 
+            />
+          </div>
         </Suspense>
 
         {/* Heatmaps */}
-        <section className="flex flex-col gap-6 w-full">
+        <section className="flex flex-col gap-6 w-full animate-slide-up stagger-5">
           <Suspense fallback={<CardSkeleton height="h-64" />}>
             <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
           </Suspense>
@@ -313,7 +324,7 @@ const App: React.FC = () => {
       {/* Keyboard Shortcuts Modal */}
       {showShortcuts && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={() => setShowShortcuts(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden animate-fade-in animate-zoom-in-95" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700/80">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <HelpCircle size={20} className="text-primary" />
