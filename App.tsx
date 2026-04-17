@@ -159,41 +159,77 @@ const App: React.FC = () => {
 
   const summarySentence = useMemo(() => {
     const { lastHour, today, todayGrowth, thisWeek } = dashboardStats;
-    const todayFormatted = today.toLocaleString();
-    const weekFormatted = thisWeek.toLocaleString();
-    const trendAbs = Math.abs(todayGrowth);
-    const trendDirection = todayGrowth >= 0 ? 'ahead of' : 'behind';
-    const trendClass = todayGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
+    const nowHour = new Date(clockTick).getHours();
+    const safeGrowth = Number.isFinite(todayGrowth) ? todayGrowth : 0;
+    const trendAbs = Math.abs(safeGrowth);
+    const trendDirection = safeGrowth >= 0 ? 'ahead of' : 'behind';
+    const trendClass = safeGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
 
-    const paceLead = (() => {
-      if (todayGrowth > 50) {
-        return 'It is an on-fire stretch. ';
-      }
-      if (todayGrowth < -30) {
-        return 'It is a slower stretch right now. ';
-      }
-      if (lastHour <= 3) {
-        return 'It is a quiet hour so far. ';
-      }
-      return '';
+    const hourLead = (() => {
+      if (nowHour >= 5 && nowHour < 11) return 'Good morning. ';
+      if (nowHour >= 11 && nowHour < 17) return 'This afternoon, ';
+      if (nowHour >= 17 && nowHour < 22) return 'This evening, ';
+      return 'Tonight, ';
     })();
 
-    const lastHourSentence = lastHour === 0
-      ? 'In the last hour, no items dropped. '
-      : `In the last hour, ${lastHour.toLocaleString()} items dropped. `;
+    const hourNoun = lastHour === 1 ? 'item' : 'items';
+
+    const paceSentence = (() => {
+      if (today === 0 && lastHour === 0) {
+        return (
+          <span className="text-stone-600 dark:text-stone-400">
+            It is very quiet so far, with no drops yet today.
+          </span>
+        );
+      }
+
+      if (safeGrowth > 50) {
+        return (
+          <>
+            <span className="text-stone-600 dark:text-stone-400">Today is running hot at </span>
+            <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
+            <span className="text-stone-600 dark:text-stone-400"> items, </span>
+            <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
+            <span className="text-stone-600 dark:text-stone-400"> ahead of its usual pace.</span>
+          </>
+        );
+      }
+
+      if (safeGrowth < -30) {
+        return (
+          <>
+            <span className="text-stone-600 dark:text-stone-400">Today is moving slower at </span>
+            <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
+            <span className="text-stone-600 dark:text-stone-400"> items, </span>
+            <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
+            <span className="text-stone-600 dark:text-stone-400"> behind its usual pace.</span>
+          </>
+        );
+      }
+
+      return (
+        <>
+          <span className="text-stone-600 dark:text-stone-400">Today is </span>
+          <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
+          <span className="text-stone-600 dark:text-stone-400"> {trendDirection} its usual pace, with </span>
+          <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
+          <span className="text-stone-600 dark:text-stone-400"> items so far.</span>
+        </>
+      );
+    })();
 
     return (
       <>
-        <span className="text-stone-600 dark:text-stone-400">{paceLead}{lastHourSentence}Today is </span>
-        <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
-        <span className="text-stone-600 dark:text-stone-400"> {trendDirection} your usual pace at </span>
-        <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
-        <span className="text-stone-600 dark:text-stone-400"> items. This week: </span>
-        <span className="font-bold text-stone-900 dark:text-stone-100">{weekFormatted}</span>
-        <span className="text-stone-600 dark:text-stone-400">.</span>
+        <span className="text-stone-600 dark:text-stone-400">{hourLead}In the past hour, </span>
+        <span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span>
+        <span className="text-stone-600 dark:text-stone-400"> {hourNoun} dropped. </span>
+        {paceSentence}
+        <span className="text-stone-600 dark:text-stone-400"> This week: </span>
+        <span className="font-bold text-stone-900 dark:text-stone-100">{thisWeek.toLocaleString()}</span>
+        <span className="text-stone-600 dark:text-stone-400"> items.</span>
       </>
     );
-  }, [dashboardStats]);
+  }, [clockTick, dashboardStats]);
 
   if (loading && !rawData) {
     return (
@@ -269,7 +305,7 @@ const App: React.FC = () => {
             <p className="font-display text-xl md:text-2xl leading-relaxed max-w-5xl">
               {isMobile ? (
                 <>
-                  <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.lastHour.toLocaleString()} new</span>
+                  <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.lastHour.toLocaleString()} in past hour</span>
                   <span className="text-stone-600 dark:text-stone-400"> · </span>
                   <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.today.toLocaleString()} today</span>
                   <span className="text-stone-600 dark:text-stone-400"> (</span>
