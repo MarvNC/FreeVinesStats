@@ -31,33 +31,37 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 p-5 sm:p-6 flex flex-col w-full overflow-visible relative">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+    <div className="flex flex-col w-full overflow-visible relative font-mono">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-3">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">Hourly Intensity</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-            PST (Pacific) · {mode === 'median' ? 'median' : 'mean'} drops per hour
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display uppercase tracking-widest flex items-center gap-2">
+            <span className="text-primary font-bold">/</span> HOURLY_INTENSITY
+          </h3>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase mt-1 font-bold">
+            PST · {mode === 'median' ? 'MEDIAN' : 'MEAN'} DROPS/HR
           </p>
         </div>
-        <SegmentedControl 
-          options={[
-            { value: 'median', label: 'Median' },
-            { value: 'mean',   label: 'Mean'   }
-          ]}
-          value={mode}
-          onChange={(val) => setMode(val as 'median' | 'mean')}
-          name="intensityMode"
-          variant="elevated"
-        />
+        <div className="self-end xl:self-auto">
+          <SegmentedControl 
+            options={[
+              { value: 'median', label: 'Median' },
+              { value: 'mean',   label: 'Mean'   }
+            ]}
+            value={mode}
+            onChange={(val) => setMode(val as 'median' | 'mean')}
+            name="intensityMode"
+            variant="flat"
+          />
+        </div>
       </div>
       
-      <div className="w-full overflow-x-auto pb-1 scrollbar-hide [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] sm:[mask-image:none]">
-        <div className="flex flex-col gap-[3px] w-full">
+      <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex flex-col gap-[2px] w-full">
           {/* Hours header */}
-          <div className="grid grid-cols-[28px_repeat(24,1fr)] gap-[3px] mb-1">
+          <div className="grid grid-cols-[24px_repeat(24,1fr)] gap-[2px] mb-1">
             <div />
             {hours.map((h) => (
-              <div key={h} className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold text-center">
+              <div key={h} className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-center uppercase">
                 {h % 4 === 0 || h === 23 ? String(h).padStart(2, '0') : ''}
               </div>
             ))}
@@ -65,8 +69,8 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
 
           {/* Day rows */}
           {daysOfWeek.map((dayName, dayIndex) => (
-            <div key={dayName} className="grid grid-cols-[28px_repeat(24,1fr)] gap-[3px] items-center">
-              <div className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold text-right pr-1.5">{dayName}</div>
+            <div key={dayName} className="grid grid-cols-[24px_repeat(24,1fr)] gap-[2px] items-center">
+              <div className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-right pr-1.5 uppercase tracking-tighter">{dayName}</div>
               {hours.map((hour) => {
                 const value      = currentData[dayIndex]?.[hour] ?? 0;
                 const colorClass = getHeatColor(value, currentMax);
@@ -79,7 +83,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
                     onFocus={(e) => handleMouseEnter(e, dayName, hour, value)}
                     onBlur={() => setHoveredCell(null)}
                     tabIndex={0}
-                    className={`aspect-square rounded-[3px] ${colorClass} cursor-crosshair hover:ring-1 hover:ring-primary/40 focus:ring-2 focus:ring-primary focus:outline-none touch-manipulation`}
+                    className={`aspect-square rounded-none ${colorClass} cursor-crosshair hover:ring-1 hover:ring-primary/40 focus:ring-2 focus:ring-primary focus:outline-none touch-manipulation border border-white/5 dark:border-black/5`}
                     title={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
                     aria-label={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
                     role="img"
@@ -91,17 +95,17 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
         </div>
       </div>
 
-      <HeatLegend />
+      <div className="mt-4">
+        <HeatLegend />
+      </div>
 
-      {/* Floating Tooltip */}
       {hoveredCell && (
         <div 
-          className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-sm text-white dark:text-slate-900 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap"
+          className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl text-xs font-bold whitespace-nowrap rounded-none border border-slate-700 dark:border-slate-300"
           style={{ left: hoveredCell.x, top: hoveredCell.y }}
         >
-          <div className="opacity-60 text-[10px] mb-0.5">{hoveredCell.day} · {String(hoveredCell.hour).padStart(2, '0')}:00</div>
-          <div>{hoveredCell.value.toLocaleString()} <span className="font-medium opacity-70">{mode} drops</span></div>
-          <div className="absolute left-1/2 bottom-0 w-2 h-2 bg-slate-900/95 dark:bg-white/95 -translate-x-1/2 translate-y-1/2 rotate-45" />
+          <div className="opacity-60 text-[10px] mb-0.5 uppercase">{hoveredCell.day} · {String(hoveredCell.hour).padStart(2, '0')}:00</div>
+          <div className="tabular-nums">{hoveredCell.value.toLocaleString()} <span className="font-bold opacity-60 text-[10px]">{mode.toUpperCase()} DROPS</span></div>
         </div>
       )}
     </div>

@@ -27,13 +27,13 @@ const SegmentedControl = <T extends string | number>({
     : 'bg-slate-50 dark:bg-slate-900/40';
 
   const activeClass = variant === 'elevated'
-    ? 'bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white'
-    : 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300';
+    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600'
+    : 'bg-primary text-white dark:bg-primary dark:text-white';
 
-  const inactiveClass = 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200';
+  const inactiveClass = 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border border-transparent';
 
   return (
-    <div className={`${containerClass} p-1 rounded-xl flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide`} role="group" aria-label={name}>
+    <div className={`${containerClass} p-[3px] rounded-none flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide border border-slate-300 dark:border-slate-700`} role="group" aria-label={name}>
       {options.map((option) => {
         const isSelected = value === option.value;
         const isDisabled = option.disabled;
@@ -52,12 +52,12 @@ const SegmentedControl = <T extends string | number>({
               disabled={isDisabled}
             />
             <div className={`
-              px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 text-center uppercase min-w-[3rem] whitespace-nowrap select-none tracking-wide flex items-center justify-center gap-1.5
+              px-3 py-1.5 rounded-none text-[10px] font-bold transition-all duration-150 text-center uppercase min-w-[3rem] whitespace-nowrap select-none tracking-widest flex items-center justify-center gap-1.5
               ${isSelected ? activeClass : inactiveClass}
             `}>
               {option.label}
               {option.keyboardHint && (
-                <span className={`inline-flex items-center justify-center rounded text-[10px] px-1 font-semibold tabular-nums opacity-60`}>
+                <span className={`inline-flex items-center justify-center rounded-none text-[9px] px-1 font-bold tabular-nums opacity-60 bg-current/10`}>
                   {option.keyboardHint}
                 </span>
               )}

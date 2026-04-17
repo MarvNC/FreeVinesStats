@@ -31,10 +31,10 @@ import {
 import SegmentedControl, { Option } from './SegmentedControl';
 import useDarkMode from '../hooks/useDarkMode';
 
-// Register only what we need — no pie, sankey, treemap, etc.
+// Register only what we need
 Chart.register(BarController, BarElement, LinearScale, ChartTooltip, annotationPlugin);
 
-// Match site typography (Plus Jakarta Sans loaded via CSS)
+// Match site typography
 Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
 interface PulseChartProps {
@@ -45,12 +45,11 @@ interface PulseChartProps {
 }
 
 const SERIES = [
-  { key: 'zeroEtv',    label: '0 ETV', color: '#ef4444' },
+  { key: 'zeroEtv',    label: '0_ETV', color: '#ef4444' },
   { key: 'lastChance', label: 'AFA',   color: '#f97316' },
   { key: 'ai',         label: 'AI',    color: '#3b82f6' },
 ] as const;
 
-// Tooltip state: data comes from Chart.js callback, position from mouse events
 interface TooltipState {
   visible: boolean;
   point: ChartDataPoint | null;
@@ -74,22 +73,16 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const [mousePos, setMousePos] = useState<MousePos>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const gridMajor  = isDark ? 'rgba(148,163,184,0.10)' : 'rgba(15,23,42,0.08)';
-  const axisColor  = isDark ? '#64748b' : '#94a3b8';
-  const refColor   = isDark ? '#64748b' : '#94a3b8';
+  const gridMajor  = isDark ? 'rgba(148,163,184,0.15)' : 'rgba(15,23,42,0.15)';
+  const axisColor  = isDark ? '#94a3b8' : '#64748b';
 
-  // Snap back to live whenever the timeframe changes
   useEffect(() => {
     setWindowAnchor(null);
   }, [timeframe]);
 
-  const effectiveAnchor = useMemo(() => {
-    return windowAnchor ?? getLiveAnchor(timeframe);
-  }, [windowAnchor, timeframe]);
+  const effectiveAnchor = useMemo(() => windowAnchor ?? getLiveAnchor(timeframe), [windowAnchor, timeframe]);
 
   const { windowStart, windowEnd } = useMemo(() => {
-    // Live view: rolling window (past N days ending today)
-    // History view: calendar-snapped window for clean period navigation
     if (windowAnchor === null) {
       const { start, end } = getLiveWindow(timeframe);
       return { windowStart: start, windowEnd: end };
@@ -107,17 +100,13 @@ const PulseChart: React.FC<PulseChartProps> = ({
 
   const oldestWindowStart = useMemo(() => {
     if (data.length === 0) return 0;
-    const { start } = getCalendarWindow(data[0].date, timeframe);
-    return start;
+    return getCalendarWindow(data[0].date, timeframe).start;
   }, [data, timeframe]);
 
   const canStepBack    = data.length > 0 && windowStart > oldestWindowStart;
   const canStepForward = !isLive;
 
   const stepBack = useCallback(() => {
-    // When stepping back from the live rolling window, anchor to the calendar
-    // period containing windowStart (the earliest visible day), then go one back.
-    // This ensures the first ← from "past 7 days" shows a clean prior week.
     const anchorForStep = windowAnchor === null ? windowStart : effectiveAnchor;
     setWindowAnchor(stepWindowAnchor(anchorForStep, timeframe, -1));
   }, [windowAnchor, windowStart, effectiveAnchor, timeframe]);
@@ -157,16 +146,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
 
   const windowLabel = useMemo(() => formatWindowLabel(windowStart, windowEnd, timeframe), [windowStart, windowEnd, timeframe]);
 
-  // ── X-axis grid line intervals by timeframe ──────────────────────────────────
-  // Major lines = prominent structural dividers (with labels where applicable).
-  // Minor lines = subtle subdivision guides, no labels.
-  //
-  //  1d  → major every 4h PST,  minor every 1h PST
-  //  7d  → major every 1d PST (midnight, with weekday label), minor every 6h PST
-  //  1m  → major every 1 week PST, minor every 1d PST (midnight)
-  //  3m  → major every 1 month PST, minor every 1 week PST
-  //  1y  → major every 1 month PST, no minor
-
   const xMajorLines = useMemo(() => {
     switch (timeframe) {
       case '1d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 4);
@@ -189,83 +168,64 @@ const PulseChart: React.FC<PulseChartProps> = ({
     }
   }, [timeframe, windowStart, windowEnd]);
 
-  // Map of tick timestamp → label text, used by the X scale callback.
-  //
-  //  1d       → tick AT each major line (every 4h):     "04:00", "08:00" …
-  //  7d       → tick CENTERED in each day span:         "Mon", "Tue" …
-  //  1m       → tick AT each week-start (Monday PST):   "Mar 9", "Mar 16" …
-  //             (week-start is unambiguous; midpoint weekday is arbitrary)
-  //  3m / 1y  → tick CENTERED in each month span:       "Jan", "Feb" …
   const xTickMap = useMemo((): Map<number, string> => {
     const map = new Map<number, string>();
     const pstDayFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', day: 'numeric' });
     const pstMonFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', month: 'short' });
 
     if (timeframe === '1d') {
-      // Label at each 4h major line
       xMajorLines.forEach(ts => map.set(ts, formatPstHourLabel(ts)));
-
     } else if (timeframe === '7d') {
-      // Label centered in each day span
       const boundaries = [windowStart, ...xMajorLines, windowEnd];
       for (let i = 0; i < boundaries.length - 1; i++) {
         const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
-        map.set(xMid, formatPstWeekdayLabel(xMid));
+        map.set(xMid, formatPstWeekdayLabel(xMid).toUpperCase());
       }
-
     } else if (timeframe === '1m') {
-      // Label AT each Monday week-start: "Mar 9", "Mar 16" …
       xMajorLines.forEach(ts => {
         const mon = pstMonFmt.format(new Date(ts));
         const day = pstDayFmt.format(new Date(ts));
-        map.set(ts, `${mon} ${day}`);
+        map.set(ts, `${mon} ${day}`.toUpperCase());
       });
-
     } else if (timeframe === '3m' || timeframe === '1y') {
-      // Label centered in each month span: "Jan", "Feb" …
       const boundaries = [windowStart, ...xMajorLines, windowEnd];
       for (let i = 0; i < boundaries.length - 1; i++) {
         const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
-        map.set(xMid, formatPstMonthLabel(xMid));
+        map.set(xMid, formatPstMonthLabel(xMid).toUpperCase());
       }
     }
-
     return map;
   }, [timeframe, xMajorLines, windowStart, windowEnd]);
 
-  // Build annotation plugin config
   const annotations = useMemo(() => {
     const result: Record<string, object> = {};
 
-    // Minor X lines — very subtle, no labels
     xMinorLines.forEach((ts) => {
       result[`xminor-${ts}`] = {
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: isDark ? 'rgba(148,163,184,0.06)' : 'rgba(15,23,42,0.06)',
+        borderColor: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(15,23,42,0.08)',
         borderWidth: 1,
+        borderDash: [2, 2],
         label: { display: false },
       };
     });
 
-    // Major X lines — more visible, solid, no labels on the line itself
     xMajorLines.forEach((ts) => {
       result[`xmajor-${ts}`] = {
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: isDark ? 'rgba(148,163,184,0.15)' : 'rgba(15,23,42,0.12)',
+        borderColor: isDark ? 'rgba(148,163,184,0.3)' : 'rgba(15,23,42,0.3)',
         borderWidth: 1,
         label: { display: false },
       };
     });
 
     return result;
-  }, [xMinorLines, xMajorLines, axisColor, isDark]);
+  }, [xMinorLines, xMajorLines, isDark]);
 
-  // ── Chart.js data ────────────────────────────────────────────────────────────
-  // Chart.js stacked bars with linear x scale need x values per dataset
   const chartData = useMemo((): ChartData<'bar', ScatterDataPoint[]> => {
     return {
       datasets: [
@@ -275,7 +235,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
           backgroundColor: '#ef4444',
           hoverBackgroundColor: '#f87171',
           stack: 's',
-          borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
+          borderRadius: 0,
           borderSkipped: false,
           minBarLength: 2,
           categoryPercentage: 0.8,
@@ -299,7 +259,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
           backgroundColor: '#3b82f6',
           hoverBackgroundColor: '#60a5fa',
           stack: 's',
-          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+          borderRadius: 0,
           borderSkipped: false,
           minBarLength: 2,
           categoryPercentage: 0.8,
@@ -309,14 +269,13 @@ const PulseChart: React.FC<PulseChartProps> = ({
     };
   }, [visibleData]);
 
-  // ── Chart.js options ─────────────────────────────────────────────────────────
   const options = useMemo((): ChartOptions<'bar'> => {
     const halfStep = intervalMs / 2;
     return {
       animation: false,
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 16, left: 0, right: 0, bottom: 0 } },
+      layout: { padding: { top: 8, left: 0, right: 0, bottom: 0 } },
       hover: { mode: 'index', intersect: false },
       scales: {
         x: {
@@ -325,18 +284,15 @@ const PulseChart: React.FC<PulseChartProps> = ({
           min: windowStart - halfStep,
           max: windowEnd   + halfStep,
           grid: { display: false },
-          border: { display: false },
+          border: { display: true, color: isDark ? '#475569' : '#cbd5e1' },
           ticks: {
             color: axisColor,
-            font: { size: 10, weight: 500 },
+            font: { size: 10, weight: 700, family: "'Outfit', monospace" },
             maxRotation: 0,
             autoSkip: false,
-            // callback returns the label for ticks we injected, empty for all others
             callback(value) {
-              // Find the closest key in xTickMap (within 1s tolerance for float drift)
               const v = Number(value);
               if (xTickMap.has(v)) return xTickMap.get(v)!;
-              // Scan for near match (midpoint ticks may have rounding)
               for (const [k, label] of xTickMap) {
                 if (Math.abs(k - v) < 1000) return label;
               }
@@ -344,10 +300,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
             },
           },
           afterBuildTicks(axis) {
-            // Replace auto-generated ticks with exactly our desired positions
             axis.ticks = Array.from(xTickMap.keys()).map(v => ({ value: v, label: '' }));
           },
-          offset: false,
         },
         y: {
           stacked: true,
@@ -357,21 +311,21 @@ const PulseChart: React.FC<PulseChartProps> = ({
             lineWidth: 1,
             drawTicks: false,
           },
-          border: { display: false, dash: [0] },
+          border: { display: false },
           ticks: {
             color: axisColor,
-            font: { size: 10, weight: 500 },
-            padding: 4,
+            font: { size: 10, weight: 700, family: "'Outfit', monospace" },
+            padding: 8,
           },
         },
       },
       plugins: {
         tooltip: {
-          enabled: false, // use custom React tooltip
+          enabled: false,
           mode: 'index',
           intersect: false,
           external(context: { chart: Chart; tooltip: TooltipModel<'bar'> }) {
-            const { chart, tooltip: tip } = context;
+            const { tooltip: tip } = context;
             if (tip.opacity === 0) {
               setTooltip(t => t.visible ? { visible: false, point: t.point } : t);
               return;
@@ -387,8 +341,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         annotation: { annotations },
       },
     };
-  }, [windowStart, windowEnd, intervalMs, axisColor, gridMajor, granularity, annotations, visibleData, xTickMap]);
-
+  }, [windowStart, windowEnd, intervalMs, axisColor, gridMajor, annotations, visibleData, xTickMap, isDark]);
 
   const timeframeOptions: Option<Timeframe>[] = (['1d', '3d', '7d', '1m', '3m', '1y'] as Timeframe[]).map((tf, i) => ({
     value: tf,
@@ -396,7 +349,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
     keyboardHint: String(i + 1),
   }));
 
-  // ── Custom tooltip renderer ─────────────────────────────────────────────────
   const renderTooltip = () => {
     if (!tooltip.visible || !tooltip.point) return null;
     const point = tooltip.point;
@@ -408,7 +360,6 @@ const PulseChart: React.FC<PulseChartProps> = ({
         })
       : `${point.fullDate} PST`;
 
-    // Default: top-right of cursor. Flip left when too close to right edge.
     const containerWidth = containerRef.current?.offsetWidth ?? 0;
     const tooltipWidth = 168;
     const gap = 14;
@@ -421,19 +372,19 @@ const PulseChart: React.FC<PulseChartProps> = ({
         className="absolute z-50 pointer-events-none"
         style={{ left: tooltipLeft, top: tooltipTop, transform: 'translateY(-100%)' }}
       >
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-xl shadow-xl border border-slate-200/80 dark:border-slate-600/80 min-w-[160px]">
-          <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-wider">{dateDisplay}</p>
-          <p className="text-base font-extrabold text-slate-900 dark:text-white tabular-nums mb-2">
-            {point.total.toLocaleString()} <span className="text-xs text-slate-400 font-normal">total</span>
+        <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-3 rounded-none shadow-xl border border-slate-700 dark:border-slate-300 min-w-[160px] font-mono">
+          <p className="text-[10px] font-bold opacity-60 mb-1.5 uppercase tracking-wider">{dateDisplay}</p>
+          <p className="text-base font-extrabold tabular-nums mb-2">
+            {point.total.toLocaleString()} <span className="text-xs font-normal opacity-60">TOTAL</span>
           </p>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {SERIES.map(({ key, label, color }) => (
-              <div key={key} className="flex items-center justify-between gap-3 text-[11px]">
-                <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                  <span className="inline-block size-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} aria-hidden="true" />
+              <div key={key} className="flex items-center justify-between gap-3 text-[10px] font-bold">
+                <span className="flex items-center gap-1.5 opacity-80">
+                  <span className="inline-block size-2" style={{ backgroundColor: color }} aria-hidden="true" />
                   {label}
                 </span>
-                <span className="font-bold text-slate-700 dark:text-slate-200 tabular-nums">
+                <span className="tabular-nums">
                   {(point[key as keyof ChartDataPoint] as number).toLocaleString()}
                 </span>
               </div>
@@ -445,76 +396,68 @@ const PulseChart: React.FC<PulseChartProps> = ({
   };
 
   return (
-    <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 p-5 sm:p-7">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-5">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white font-display">The Pulse</h2>
+    <div className="w-full flex flex-col gap-4">
+      {/* Header / Control Strip */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 font-mono">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-4">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white font-display uppercase tracking-widest flex items-center gap-2">
+              <span className="text-primary font-bold">/</span> THE_PULSE
+            </h2>
 
-            {/* Step navigation */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  onClick={stepBack}
-                  disabled={!canStepBack}
-                  aria-label="Previous period"
-                  className="flex items-center justify-center size-7 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
-                >
-                  <ChevronLeft size={16} aria-hidden="true" />
-                </button>
-                <button
-                  onClick={stepForward}
-                  disabled={!canStepForward}
-                  aria-label="Next period"
-                  className="flex items-center justify-center size-7 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
-                >
-                  <ChevronRight size={16} aria-hidden="true" />
-                </button>
-              </div>
-
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums min-w-0 truncate">
-                {windowLabel}
-              </span>
-
-              <button
-                onClick={goLive}
-                aria-label="Jump to current period"
-                aria-hidden={isLive}
-                tabIndex={isLive ? -1 : 0}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-150 flex-shrink-0
-                  bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300
-                  hover:bg-primary/20 dark:hover:bg-primary/30
-                  ${isLive ? 'opacity-0 pointer-events-none w-0 p-0 overflow-hidden' : 'opacity-100'}`}
-              >
-                <span className="relative flex size-1.5 flex-shrink-0">
-                  <span className="animate-ping absolute inline-flex size-full rounded-full bg-primary opacity-75" />
-                  <span className="relative inline-flex size-1.5 rounded-full bg-primary" />
+            {/* Series legend with totals */}
+            <div className="flex items-center gap-3">
+              {seriesTotals.map(({ key, label, color, total }) => (
+                <span key={key} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  <span className="inline-block size-2" style={{ backgroundColor: color }} aria-hidden="true" />
+                  {label} <span className="text-slate-900 dark:text-white ml-0.5">[{total.toLocaleString()}]</span>
                 </span>
-                Today
-              </button>
+              ))}
             </div>
           </div>
-
-          {/* Series legend with totals */}
-          <div className="flex flex-wrap items-center gap-4 mt-1">
-            {seriesTotals.map(({ key, label, color, total }) => (
-              <span key={key} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                <span className="inline-block size-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
-                {label} <span className="font-semibold text-slate-700 dark:text-slate-300 ml-0.5">({total.toLocaleString()})</span>
-              </span>
-            ))}
+          
+          <div className="flex items-center gap-2 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+            <span>{windowLabel}</span>
+            <span className="opacity-50">|</span>
+            <span>PST</span>
           </div>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">All times in PST (Pacific)</p>
         </div>
 
-        <div className="flex-shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Step navigation */}
+          <div className="flex items-center">
+            <button
+              onClick={stepBack}
+              disabled={!canStepBack}
+              aria-label="Previous period"
+              className="flex items-center justify-center h-7 w-8 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              onClick={goLive}
+              disabled={isLive}
+              aria-label="Jump to current period"
+              className="flex items-center justify-center h-7 px-3 border-y border-slate-300 dark:border-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors uppercase tracking-widest"
+            >
+              Today
+            </button>
+            <button
+              onClick={stepForward}
+              disabled={!canStepForward}
+              aria-label="Next period"
+              className="flex items-center justify-center h-7 w-8 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+
           <SegmentedControl
             options={timeframeOptions}
             value={timeframe}
             onChange={onTimeframeChange}
             name="timeframe"
-            variant="elevated"
+            variant="flat"
           />
         </div>
       </div>
@@ -522,7 +465,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       {/* Chart */}
       <div
         ref={containerRef}
-        className="h-64 w-full relative"
+        className="h-80 w-full relative group"
         onMouseMove={e => {
           const rect = containerRef.current?.getBoundingClientRect();
           if (!rect) return;
@@ -533,7 +476,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         <Bar<ScatterDataPoint[]> key={resolvedTheme} data={chartData} options={options as ChartOptions<'bar'>} />
         {renderTooltip()}
       </div>
-    </section>
+    </div>
   );
 };
 
