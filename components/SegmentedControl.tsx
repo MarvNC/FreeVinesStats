@@ -23,17 +23,17 @@ const SegmentedControl = <T extends string | number>({
   name,
 }: SegmentedControlProps<T>) => {
   const containerClass = variant === 'elevated' 
-    ? 'bg-slate-100 dark:bg-slate-900/80' 
-    : 'bg-slate-50 dark:bg-slate-900/40';
+    ? 'bg-stone-100 dark:bg-stone-800/80 p-1 rounded-xl border border-stone-200 dark:border-stone-700' 
+    : 'bg-transparent gap-1';
 
   const activeClass = variant === 'elevated'
-    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600'
-    : 'bg-primary text-white dark:bg-primary dark:text-white';
+    ? 'bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-white rounded-lg'
+    : 'bg-stone-200 text-stone-900 dark:bg-stone-700 dark:text-white rounded-lg';
 
-  const inactiveClass = 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border border-transparent';
+  const inactiveClass = 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-lg';
 
   return (
-    <div className={`${containerClass} p-[3px] rounded-none flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide border border-slate-300 dark:border-slate-700`} role="group" aria-label={name}>
+    <div className={`${containerClass} flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide`} role="group" aria-label={name}>
       {options.map((option) => {
         const isSelected = value === option.value;
         const isDisabled = option.disabled;
@@ -52,12 +52,12 @@ const SegmentedControl = <T extends string | number>({
               disabled={isDisabled}
             />
             <div className={`
-              px-3 py-1.5 rounded-none text-[10px] font-bold transition-all duration-150 text-center uppercase min-w-[3rem] whitespace-nowrap select-none tracking-widest flex items-center justify-center gap-1.5
+              px-3 py-1.5 text-sm font-medium transition-all duration-200 text-center min-w-[3rem] whitespace-nowrap select-none flex items-center justify-center gap-1.5
               ${isSelected ? activeClass : inactiveClass}
             `}>
               {option.label}
               {option.keyboardHint && (
-                <span className={`inline-flex items-center justify-center rounded-none text-[9px] px-1 font-bold tabular-nums opacity-60 bg-current/10`}>
+                <span className={`inline-flex items-center justify-center rounded-md text-[10px] px-1.5 py-0.5 font-medium tabular-nums opacity-60 bg-current/10`}>
                   {option.keyboardHint}
                 </span>
               )}

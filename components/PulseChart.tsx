@@ -45,9 +45,9 @@ interface PulseChartProps {
 }
 
 const SERIES = [
-  { key: 'zeroEtv',    label: '0_ETV', color: '#ff006e' },
-  { key: 'lastChance', label: 'AFA',   color: '#ccff00' },
-  { key: 'ai',         label: 'AI',    color: '#00e5ff' },
+  { key: 'zeroEtv',    label: '0 ETV', color: '#a2495c' },
+  { key: 'lastChance', label: 'AFA',   color: '#c9a96e' },
+  { key: 'ai',         label: 'All Items', color: '#6b8f71' },
 ] as const;
 
 interface TooltipState {
@@ -232,8 +232,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: '0 ETV',
           data: visibleData.map(d => ({ x: d.date, y: d.zeroEtv })),
-          backgroundColor: '#ff006e',
-          hoverBackgroundColor: '#ff4d94',
+          backgroundColor: '#a2495c',
+          hoverBackgroundColor: '#c2586f',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -244,8 +244,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: 'AFA',
           data: visibleData.map(d => ({ x: d.date, y: d.lastChance })),
-          backgroundColor: '#ccff00',
-          hoverBackgroundColor: '#d9ff33',
+          backgroundColor: '#c9a96e',
+          hoverBackgroundColor: '#dec28a',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -256,8 +256,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: 'AI',
           data: visibleData.map(d => ({ x: d.date, y: d.ai })),
-          backgroundColor: '#00e5ff',
-          hoverBackgroundColor: '#33ebff',
+          backgroundColor: '#6b8f71',
+          hoverBackgroundColor: '#80a886',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -401,22 +401,18 @@ const PulseChart: React.FC<PulseChartProps> = ({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white font-display uppercase tracking-wider flex items-center gap-2">
-              The Pulse
-            </h2>
-
             {/* Series legend with totals */}
-            <div className="flex items-center gap-3 ml-2 mt-1">
+            <div className="flex items-center gap-4 mt-1">
               {seriesTotals.map(({ key, label, color, total }) => (
-                <span key={key} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  <span className="inline-block size-2 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
-                  {label.replace('_', ' ')} <span className="text-slate-900 dark:text-white ml-0.5 tabular-nums">{total.toLocaleString()}</span>
+                <span key={key} className="flex items-center gap-2 text-sm font-medium text-stone-500 dark:text-stone-400">
+                  <span className="inline-block size-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
+                  {label} <span className="text-stone-900 dark:text-stone-100 ml-1 tabular-nums font-semibold">{total.toLocaleString()}</span>
                 </span>
               ))}
             </div>
           </div>
           
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2 text-sm font-medium text-stone-500 dark:text-stone-400 mt-2">
             <span>{windowLabel}</span>
             <span className="opacity-50">|</span>
             <span>PST</span>

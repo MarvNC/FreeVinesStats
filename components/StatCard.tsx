@@ -25,10 +25,10 @@ const StatCard: React.FC<StatCardProps> = ({
   const isLowData = value <= 3 && trend !== undefined && trend <= -80;
   
   const trendColorText = isLowData
-    ? 'text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800'
+    ? 'text-stone-400 dark:text-stone-500 border-stone-200 dark:border-stone-800'
     : isExtremeTrend
-    ? 'text-orange-500 border-orange-500/30 bg-orange-500/10'
-    : isPositive ? 'text-emerald-500 border-emerald-500/30 bg-emerald-500/10' : 'text-rose-500 border-rose-500/30 bg-rose-500/10';
+    ? 'text-orange-600 dark:text-orange-500 bg-orange-100 dark:bg-orange-500/10'
+    : isPositive ? 'text-emerald-600 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-500/10' : 'text-rose-600 dark:text-rose-500 bg-rose-100 dark:bg-rose-500/10';
 
   const prevValueRef = React.useRef(value);
   const [animate, setAnimate] = React.useState(false);
@@ -49,12 +49,12 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <div className="flex flex-col gap-3 group relative z-10">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-bold tracking-widest uppercase font-mono">
+        <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-sm font-medium tracking-wide">
           <Icon size={14} className={iconColorClass} />
           <span>{title}</span>
         </div>
         {trend !== undefined && (
-          <span className={`flex items-center text-[10px] font-bold tabular-nums font-mono px-1.5 py-0.5 border ${trendColorText}`}>
+          <span className={`flex items-center text-xs font-medium tabular-nums px-2 py-0.5 rounded-full ${trendColorText}`}>
             {trend >= 100 ? (
               <Flame size={12} className="mr-0.5" />
             ) : isPositive ? (
@@ -66,12 +66,12 @@ const StatCard: React.FC<StatCardProps> = ({
           </span>
         )}
       </div>
-      <div className="flex items-end gap-3 mt-1">
-        <div className={`text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter leading-none font-mono drop-shadow-[0_0_12px_rgba(255,255,255,0.1)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.2)] ${animate ? 'animate-pop text-primary' : ''} transition-colors duration-300`}>
+      <div className="flex items-end gap-3 mt-2">
+        <div className={`text-4xl sm:text-5xl font-bold text-stone-900 dark:text-white tabular-nums tracking-tight leading-none drop-shadow-sm ${animate ? 'animate-pop text-primary' : ''} transition-colors duration-300`}>
           {value.toLocaleString()}
         </div>
       </div>
-      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold font-mono tracking-widest uppercase border-t border-slate-200 dark:border-slate-800 pt-2 mt-1">
+      <div className="text-xs text-stone-500 dark:text-stone-400 font-medium tracking-wide pt-3 mt-1 border-t border-stone-100 dark:border-stone-800/60">
         {subValue}
       </div>
     </div>

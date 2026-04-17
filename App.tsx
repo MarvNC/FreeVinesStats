@@ -133,22 +133,24 @@ const App: React.FC = () => {
 
   if (loading && !rawData) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background-light dark:bg-background-dark font-sans">
-        <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading statistics...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background-light dark:bg-background-dark font-sans relative">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+        <div className="w-12 h-12 border-4 border-stone-200 dark:border-stone-800 border-t-primary rounded-full animate-spin z-10"></div>
+        <p className="text-sm font-medium text-stone-500 dark:text-stone-400 z-10">Loading statistics...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark text-slate-600 dark:text-slate-400 font-sans px-4 text-center">
-        <CloudOff size={48} className="text-rose-400 mb-2" />
-        <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white uppercase tracking-widest">Unable to Load Data</h2>
-        <p className="text-sm max-w-md">{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark text-stone-600 dark:text-stone-400 font-sans px-4 text-center relative">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+        <CloudOff size={48} className="text-rose-400 mb-2 z-10" />
+        <h2 className="text-xl font-display font-bold text-stone-900 dark:text-white z-10">Unable to Load Data</h2>
+        <p className="text-sm max-w-md z-10">{error}</p>
         <button 
           onClick={loadData}
-          className="mt-4 px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium rounded-full hover:opacity-90 transition-opacity"
+          className="mt-4 px-6 py-2 bg-stone-900 dark:bg-white text-white dark:text-stone-900 font-medium rounded-full hover:opacity-90 transition-opacity z-10"
         >
           Try Again
         </button>
@@ -158,56 +160,61 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden">
+      {/* Subtle warm noise texture overlay */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
+      
       {/* Header Zone */}
-      <div className="w-full border-b border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark relative">
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-emerald-400 to-primary/20"></div>
+      <div className="w-full border-b border-stone-200 dark:border-stone-800 bg-background-light dark:bg-background-dark relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-1.5 border border-slate-900 dark:border-white group hover:bg-transparent hover:text-slate-900 dark:hover:bg-transparent dark:hover:text-white transition-colors duration-300">
-                <ChartNoAxesCombined size={20} className="group-hover:scale-110 transition-transform" />
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-stone-800 dark:text-stone-100">
+                <ChartNoAxesCombined size={24} className="text-primary" />
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-display">
+                  FreeVinesStats
+                </h1>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display uppercase">
-                FreeVines<span className="text-primary">Stats</span>
-              </h1>
+              <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
+                Amazon Vine drop tracking and analytics
+              </p>
             </div>
 
-            <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-sm font-medium text-stone-500 dark:text-stone-400">
               {dashboardStats.updatedAt && (
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                   <button 
                     onClick={loadData} 
-                    className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors group font-mono"
+                    className="flex items-center gap-1.5 hover:text-stone-900 dark:hover:text-stone-100 transition-colors group"
                     title="Refresh data (R)"
                   >
                     <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-300" />
-                    <span className="hidden sm:inline uppercase tracking-wider text-[10px] font-bold">Updated {dayjs(dashboardStats.updatedAt).format('HH:mm:ss')}</span>
+                    <span className="hidden sm:inline">Updated {dayjs(dashboardStats.updatedAt).format('HH:mm:ss')}</span>
                   </button>
                 </div>
               )}
-              <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
-              <button onClick={() => setShowShortcuts(true)} className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold font-mono">
-                <HelpCircle size={14} />
-                <span className="hidden sm:inline">Keys</span> [?]
+              <div className="hidden sm:block w-px h-4 bg-stone-200 dark:bg-stone-800"></div>
+              <button onClick={() => setShowShortcuts(true)} className="hover:text-stone-900 dark:hover:text-stone-100 transition-colors flex items-center gap-1.5">
+                <HelpCircle size={16} />
+                <span className="hidden sm:inline">Keys [?]</span>
               </button>
-              <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
+              <div className="hidden sm:block w-px h-4 bg-stone-200 dark:bg-stone-800"></div>
               <ThemeToggle />
             </div>
           </header>
         </div>
       </div>
 
-      <main className="w-full flex flex-col">
+      <main className="w-full flex flex-col relative z-10">
         {/* Ticker Zone */}
-        <section className="w-full bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 flex flex-col xl:flex-row xl:items-stretch justify-between gap-6">
-            <div className="flex flex-col sm:flex-row flex-1 items-stretch gap-0 border border-slate-200 dark:border-slate-800">
-              <div className="flex-1 p-4 sm:p-6 sm:border-r border-b sm:border-b-0 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 relative group overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 dark:bg-primary/10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:bg-primary/20 transition-colors"></div>
+        <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+              <div className="p-5 sm:p-6 bg-white dark:bg-stone-800/50 rounded-2xl shadow-soft relative group overflow-hidden transition-all duration-300 hover:shadow-md border border-stone-100 dark:border-stone-800/80">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-primary/15 transition-colors duration-500"></div>
                 <StatCard 
                   title="Last Hour" 
                   value={dashboardStats.lastHour} 
@@ -216,8 +223,8 @@ const App: React.FC = () => {
                   iconColorClass="text-primary"
                 />
               </div>
-              <div className="flex-1 p-4 sm:p-6 sm:border-r border-b sm:border-b-0 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 relative group overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:bg-emerald-500/20 transition-colors"></div>
+              <div className="p-5 sm:p-6 bg-white dark:bg-stone-800/50 rounded-2xl shadow-soft relative group overflow-hidden transition-all duration-300 hover:shadow-md border border-stone-100 dark:border-stone-800/80">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-emerald-500/15 transition-colors duration-500"></div>
                 <StatCard 
                   title="Today" 
                   value={dashboardStats.today} 
@@ -227,8 +234,8 @@ const App: React.FC = () => {
                   iconColorClass="text-emerald-500"
                 />
               </div>
-              <div className="flex-1 p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-900/20 relative group overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 dark:bg-violet-500/10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:bg-violet-500/20 transition-colors"></div>
+              <div className="p-5 sm:p-6 bg-white dark:bg-stone-800/50 rounded-2xl shadow-soft relative group overflow-hidden transition-all duration-300 hover:shadow-md border border-stone-100 dark:border-stone-800/80">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 dark:bg-violet-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-violet-500/15 transition-colors duration-500"></div>
                 <StatCard 
                   title="This Week" 
                   value={dashboardStats.thisWeek} 
@@ -243,24 +250,18 @@ const App: React.FC = () => {
         </section>
 
         {/* Dashboard Controls & Chart Zone */}
-        <section className="w-full bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
+        <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-8 pb-10">
             {/* Dedicated Control Strip for Filter */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-6 bg-primary"></div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display uppercase tracking-widest">
-                    Data Stream
-                  </h2>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 font-mono">Feed:</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+              <h2 className="text-xl md:text-2xl font-bold text-stone-900 dark:text-stone-100 font-display flex items-center gap-2">
+                The Pulse
+              </h2>
+              <div className="flex items-center gap-2">
                 <SegmentedControl 
                   options={[
-                    { value: 'all', label: 'All' },
-                    { value: 'zeroEtv', label: '0_ETV' },
+                    { value: 'all', label: 'All Items' },
+                    { value: 'zeroEtv', label: '0 ETV' },
                     { value: 'afa', label: 'AFA' },
                   ]}
                   value={dataFilter}
@@ -268,13 +269,13 @@ const App: React.FC = () => {
                   name="dataFilter"
                   variant="flat"
                 />
-                <div className="relative group ml-1 mr-2 hidden sm:block">
-                  <Info size={14} className="text-slate-400 hover:text-primary cursor-help transition-colors" />
-                  <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-none border border-slate-700 dark:border-slate-300 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 tracking-wide font-mono">
-                    <p className="font-bold mb-2 border-b border-slate-700 dark:border-slate-200 pb-2 uppercase text-[10px] tracking-widest">Filter Labels</p>
-                    <p className="mt-2"><span className="text-primary font-bold">ALL</span> = AI ITEMS</p>
-                    <p className="mt-2"><span className="text-rose-400 font-bold">0_ETV</span> = $0 TAX VALUE</p>
-                    <p className="mt-2"><span className="text-orange-400 font-bold">AFA</span> = AVAIL FOR ALL</p>
+                <div className="relative group ml-1 hidden sm:block">
+                  <Info size={16} className="text-stone-400 hover:text-primary cursor-help transition-colors" />
+                  <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-sm rounded-xl shadow-soft border border-stone-100 dark:border-stone-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    <p className="font-semibold mb-2 border-b border-stone-100 dark:border-stone-700 pb-2">Filter Labels</p>
+                    <p className="mt-2"><span className="text-primary font-medium">All Items</span> = AI Items</p>
+                    <p className="mt-2"><span className="text-[#a2495c] font-medium">0 ETV</span> = $0 Tax Value</p>
+                    <p className="mt-2"><span className="text-[#c9a96e] font-medium">AFA</span> = Available For All</p>
                   </div>
                 </div>
               </div>
@@ -309,21 +310,21 @@ const App: React.FC = () => {
         </section>
       </main>
 
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <footer className="w-full pt-16 pb-8 flex flex-col items-center justify-center gap-4 text-center text-slate-400 dark:text-slate-500 font-mono uppercase text-[10px] tracking-widest font-bold">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative z-10">
+        <footer className="w-full pt-16 pb-8 flex flex-col items-center justify-center gap-4 text-center text-stone-500 dark:text-stone-400 text-sm font-medium">
           <a 
             href="https://github.com/MarvNC/FreeVinesStats" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
             aria-label="View source on GitHub"
           >
             <Github size={16} />
-            <span>SOURCE // BY MARVNC</span>
+            <span>Source // by MarvNC</span>
           </a>
           <p className="opacity-60 max-w-sm leading-relaxed mt-2">
-            DATA STREAM FROM <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VINEHELPER</a>.<br />
-            <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">SUPPORT VINEHELPER</a> IF YOU ENJOY THIS DATA.
+            Data stream from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
+            <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VineHelper</a> if you enjoy this data.
           </p>
         </footer>
       </div>

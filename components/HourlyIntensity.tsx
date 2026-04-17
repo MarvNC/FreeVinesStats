@@ -34,10 +34,10 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
     <div className="flex flex-col w-full overflow-visible relative">
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-3">
         <div>
-          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white font-display uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-xl md:text-2xl font-bold text-stone-900 dark:text-stone-100 font-display flex items-center gap-2">
             Hourly Intensity
           </h3>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest font-mono">
+          <p className="text-sm font-medium text-stone-500 dark:text-stone-400 mt-1">
             PST · {mode === 'median' ? 'Median' : 'Mean'} drops/hr
           </p>
         </div>
