@@ -26,7 +26,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
 
   const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const handleMouseEnter = (e: React.MouseEvent, date: string, value: number) => {
+  const handleMouseEnter = (e: React.MouseEvent | React.FocusEvent<HTMLDivElement>, date: string, value: number) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setHoveredCell({ date, value, x: rect.left + rect.width / 2, y: rect.top - 10 });
   };
@@ -35,7 +35,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 p-5 sm:p-6 flex flex-col w-full overflow-visible relative">
       <div className="flex justify-between items-center mb-5">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">Weekly Activity</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white font-display">Weekly Activity</h3>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Local timezone · last 24 weeks</p>
         </div>
       </div>
@@ -76,7 +76,10 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
                     key={weekIndex} 
                     onMouseEnter={(e) => !isFuture && handleMouseEnter(e, dateKey, value)}
                     onMouseLeave={() => setHoveredCell(null)}
-                    className={`aspect-square rounded-[3px] ${finalColor} cursor-crosshair hover:ring-1 hover:ring-primary/40 touch-manipulation`}
+                    onFocus={(e) => !isFuture && handleMouseEnter(e, dateKey, value)}
+                    onBlur={() => setHoveredCell(null)}
+                    tabIndex={isFuture ? -1 : 0}
+                    className={`aspect-square rounded-[3px] ${finalColor} cursor-crosshair hover:ring-1 hover:ring-primary/40 focus:ring-2 focus:ring-primary focus:outline-none touch-manipulation`}
                     title={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
                     aria-label={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
                     role={!isFuture ? 'img' : undefined}

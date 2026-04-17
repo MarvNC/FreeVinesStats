@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
-import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar } from 'lucide-react';
+import React, { useEffect, useState, useMemo, lazy, Suspense, useCallback } from 'react';
+import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar, RefreshCw } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -10,6 +10,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
 
 import ThemeToggle from './components/ThemeToggle';
+import useDarkMode from './hooks/useDarkMode';
 import StatCard from './components/StatCard';
 import SegmentedControl from './components/SegmentedControl';
 import useIsMobile from './hooks/useIsMobile';
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1d');
   const [dataFilter, setDataFilter] = useState<DataFilter>('all');
   const isMobile = useIsMobile();
+  const [, setTheme, theme] = useDarkMode();
 
   // Auto-derive granularity to optimize chart readability across devices
   const granularity = useMemo((): Granularity => {
@@ -48,27 +50,56 @@ const App: React.FC = () => {
     }
   }, [timeframe, isMobile]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      const fetchStart = performance.now();
-      try {
-        setLoading(true);
-        const data = await fetchStats();
-        console.log(`[Perf] API Fetch & Parse: ${(performance.now() - fetchStart).toFixed(2)} ms`);
-        console.log(`[Perf] Data Size: ${data.history.length} items`);
-        setRawData(data);
-      } catch (err) {
-        console.log(`[Perf] API Fetch & Parse failed after: ${(performance.now() - fetchStart).toFixed(2)} ms`);
-        setError('Failed to load stats. Please check your connection.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadData = useCallback(async () => {
+    const fetchStart = performance.now();
+    try {
+      setLoading(true);
+      const data = await fetchStats();
+      console.log(`[Perf] API Fetch & Parse: ${(performance.now() - fetchStart).toFixed(2)} ms`);
+      console.log(`[Perf] Data Size: ${data.history.length} items`);
+      setRawData(data);
+      setError(null);
+    } catch (err) {
+      console.log(`[Perf] API Fetch & Parse failed after: ${(performance.now() - fetchStart).toFixed(2)} ms`);
+      setError('Failed to load stats. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
     loadData();
     const interval = setInterval(loadData, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadData]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      const key = e.key.toLowerCase();
+      if (key === '1') setTimeframe('1d');
+      if (key === '2') setTimeframe('3d');
+      if (key === '3') setTimeframe('7d');
+      if (key === '4') setTimeframe('1m');
+      if (key === '5') setTimeframe('3m');
+      if (key === '6') setTimeframe('1y');
+      if (key === 'r') {
+        e.preventDefault();
+        loadData();
+      }
+      if (key === 'd') {
+        e.preventDefault();
+        if (theme === 'system') setTheme('light');
+        else if (theme === 'light') setTheme('dark');
+        else setTheme('system');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loadData, theme, setTheme]);
 
   const dashboardStats: DashboardStats = useMemo(() => {
     if (!rawData) return { lastHour: 0, today: 0, todayGrowth: 0, todayMedian: 0, thisWeek: 0, weekGrowth: 0, weekMedian: 0, updatedAt: null };
@@ -120,7 +151,7 @@ const App: React.FC = () => {
             <ChartNoAxesCombined size={20} className="text-primary sm:hidden" />
             <ChartNoAxesCombined size={24} className="text-primary hidden sm:block" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display">
             FreeVinesStats
           </h1>
         </div>
@@ -139,7 +170,7 @@ const App: React.FC = () => {
                 </span>
               </div>
               {/* Desktop: dot + text */}
-              <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
+              <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700" aria-live="polite">
                 <span className="relative flex h-2 w-2 flex-shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -148,6 +179,14 @@ const App: React.FC = () => {
                   Updated {dayjs(dashboardStats.updatedAt).fromNow()}
                 </span>
               </div>
+              <button 
+                onClick={loadData} 
+                className="flex items-center justify-center h-8 w-8 sm:h-auto sm:w-auto sm:px-2 sm:py-1.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group"
+                aria-label="Refresh data (Keyboard shortcut: R)"
+                title="Refresh data (R)"
+              >
+                <RefreshCw size={14} className="text-slate-500 dark:text-slate-400 group-hover:rotate-180 transition-transform duration-300" />
+              </button>
             </>
           )}
           <ThemeToggle />

@@ -25,7 +25,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
   const currentData = mode === 'median' ? medianData : meanData;
   const currentMax  = mode === 'median' ? maxMedian  : maxMean;
 
-  const handleMouseEnter = (e: React.MouseEvent, day: string, hour: number, value: number) => {
+  const handleMouseEnter = (e: React.MouseEvent | React.FocusEvent<HTMLDivElement>, day: string, hour: number, value: number) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setHoveredCell({ day, hour, value, x: rect.left + rect.width / 2, y: rect.top - 10 });
   };
@@ -34,7 +34,7 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 p-5 sm:p-6 flex flex-col w-full overflow-visible relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">Hourly Intensity</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white font-display">Hourly Intensity</h3>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
             Local timezone · {mode === 'median' ? 'median' : 'mean'} drops per hour
           </p>
@@ -76,7 +76,10 @@ const HourlyIntensity: React.FC<HourlyIntensityProps> = ({
                     key={hour} 
                     onMouseEnter={(e) => handleMouseEnter(e, dayName, hour, value)}
                     onMouseLeave={() => setHoveredCell(null)}
-                    className={`aspect-square rounded-[3px] ${colorClass} cursor-crosshair hover:ring-1 hover:ring-primary/40 touch-manipulation`}
+                    onFocus={(e) => handleMouseEnter(e, dayName, hour, value)}
+                    onBlur={() => setHoveredCell(null)}
+                    tabIndex={0}
+                    className={`aspect-square rounded-[3px] ${colorClass} cursor-crosshair hover:ring-1 hover:ring-primary/40 focus:ring-2 focus:ring-primary focus:outline-none touch-manipulation`}
                     title={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
                     aria-label={`${dayName} ${String(hour).padStart(2, '0')}:00 — ${value.toLocaleString()} ${mode} drops`}
                     role="img"

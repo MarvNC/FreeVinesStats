@@ -2,21 +2,31 @@
 @config "../tailwind.config.js";
 
 :root {
-  --heat-0: #e2e8f0; /* slate-200  — empty */
-  --heat-1: #bfdbfe; /* blue-200   */
-  --heat-2: #60a5fa; /* blue-400   */
-  --heat-3: #2563eb; /* blue-600   */
-  --heat-4: #1e40af; /* blue-800   */
-  --heat-5: #172554; /* blue-950   — peak */
+  --heat-0: #f1f5f9; /* slate-100  — empty */
+  --heat-1: #c7d2fe; /* indigo-200 */
+  --heat-2: #818cf8; /* indigo-400 */
+  --heat-3: #38bdf8; /* cyan-400   */
+  --heat-4: #06b6d4; /* cyan-500   */
+  --heat-5: #0891b2; /* cyan-600   — peak */
 }
 
 .dark {
-  --heat-0: #1e293b; /* slate-800  — empty */
-  --heat-1: #1e3a8a; /* blue-900   */
-  --heat-2: #1d4ed8; /* blue-700   */
-  --heat-3: #3b82f6; /* blue-500   */
-  --heat-4: #93c5fd; /* blue-300   */
-  --heat-5: #dbeafe; /* blue-100   — peak */
+  --heat-0: #0f172a; /* slate-900  — empty */
+  --heat-1: #312e81; /* indigo-900 */
+  --heat-2: #3730a3; /* indigo-800 */
+  --heat-3: #4338ca; /* indigo-700 */
+  --heat-4: #0891b2; /* cyan-600   */
+  --heat-5: #22d3ee; /* cyan-400   — peak */
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-pop {
+  animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 body {

@@ -422,7 +422,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       >
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-xl shadow-xl border border-slate-200/80 dark:border-slate-600/80 min-w-[160px]">
           <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-wider">{dateDisplay}</p>
-          <p className="text-base font-extrabold text-slate-900 dark:text-white mb-2">
+          <p className="text-base font-extrabold text-slate-900 dark:text-white font-mono mb-2">
             {point.total.toLocaleString()} <span className="text-xs text-slate-400 font-normal">total</span>
           </p>
           <div className="flex flex-col gap-1">
@@ -449,7 +449,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-5">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">The Pulse</h2>
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white font-display">The Pulse</h2>
 
             {/* Step navigation */}
             <div className="flex items-center gap-2">
@@ -472,7 +472,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
                 </button>
               </div>
 
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums min-w-0 truncate">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 tabular-nums min-w-0 truncate font-mono">
                 {windowLabel}
               </span>
 

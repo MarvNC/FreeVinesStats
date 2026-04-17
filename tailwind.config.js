@@ -17,7 +17,9 @@ export default {
         "heat-5": "var(--heat-5)"
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"]
+        sans: ["Inter", "sans-serif"],
+        display: ["Space Grotesk", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
       },
       boxShadow: {
         soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)"
