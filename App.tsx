@@ -3,6 +3,7 @@ import { Github, CloudOff, RefreshCw, HelpCircle, X, Info, Sprout } from 'lucide
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
+import { getSummarySentenceParts, pickSummaryStats } from './utils/sentences';
 
 import ThemeToggle from './components/ThemeToggle';
 import useDarkMode from './hooks/useDarkMode';
@@ -158,24 +159,12 @@ const App: React.FC = () => {
   }, [clockTick]);
 
   const summarySentence = useMemo(() => {
-    const { lastHour, today, todayGrowth, thisWeek } = dashboardStats;
-    const nowHour = new Date(clockTick).getHours();
-    const safeGrowth = Number.isFinite(todayGrowth) ? todayGrowth : 0;
-    const trendAbs = Math.abs(safeGrowth);
-    const trendDirection = safeGrowth >= 0 ? 'ahead of' : 'behind';
-    const trendClass = safeGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
-
-    const hourLead = (() => {
-      if (nowHour >= 5 && nowHour < 11) return 'Good morning. ';
-      if (nowHour >= 11 && nowHour < 17) return 'This afternoon, ';
-      if (nowHour >= 17 && nowHour < 22) return 'This evening, ';
-      return 'Tonight, ';
-    })();
-
-    const hourNoun = lastHour === 1 ? 'item' : 'items';
+    const { lastHour, today, thisWeek } = dashboardStats;
+    const summaryParts = getSummarySentenceParts(pickSummaryStats(dashboardStats), clockTick);
+    const trendClass = summaryParts.isPositiveTrend ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
 
     const paceSentence = (() => {
-      if (today === 0 && lastHour === 0) {
+      if (summaryParts.paceVariant === 'quiet') {
         return (
           <span className="text-stone-600 dark:text-stone-400">
             It is very quiet so far, with no drops yet today.
@@ -183,25 +172,25 @@ const App: React.FC = () => {
         );
       }
 
-      if (safeGrowth > 50) {
+      if (summaryParts.paceVariant === 'hot') {
         return (
           <>
             <span className="text-stone-600 dark:text-stone-400">Today is running hot at </span>
             <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
             <span className="text-stone-600 dark:text-stone-400"> items, </span>
-            <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
+            <span className={`font-bold ${trendClass}`}>{summaryParts.trendAbs}%</span>
             <span className="text-stone-600 dark:text-stone-400"> ahead of its usual pace.</span>
           </>
         );
       }
 
-      if (safeGrowth < -30) {
+      if (summaryParts.paceVariant === 'slow') {
         return (
           <>
             <span className="text-stone-600 dark:text-stone-400">Today is moving slower at </span>
             <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
             <span className="text-stone-600 dark:text-stone-400"> items, </span>
-            <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
+            <span className={`font-bold ${trendClass}`}>{summaryParts.trendAbs}%</span>
             <span className="text-stone-600 dark:text-stone-400"> behind its usual pace.</span>
           </>
         );
@@ -210,8 +199,8 @@ const App: React.FC = () => {
       return (
         <>
           <span className="text-stone-600 dark:text-stone-400">Today is </span>
-          <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
-          <span className="text-stone-600 dark:text-stone-400"> {trendDirection} its usual pace, with </span>
+          <span className={`font-bold ${trendClass}`}>{summaryParts.trendAbs}%</span>
+          <span className="text-stone-600 dark:text-stone-400"> {summaryParts.trendDirection} its usual pace, with </span>
           <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
           <span className="text-stone-600 dark:text-stone-400"> items so far.</span>
         </>
@@ -220,9 +209,9 @@ const App: React.FC = () => {
 
     return (
       <>
-        <span className="text-stone-600 dark:text-stone-400">{hourLead}In the past hour, </span>
+        <span className="text-stone-600 dark:text-stone-400">{summaryParts.hourLead} In the past hour, </span>
         <span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span>
-        <span className="text-stone-600 dark:text-stone-400"> {hourNoun} dropped. </span>
+        <span className="text-stone-600 dark:text-stone-400"> {summaryParts.hourNoun} dropped. </span>
         {paceSentence}
         <span className="text-stone-600 dark:text-stone-400"> This week: </span>
         <span className="font-bold text-stone-900 dark:text-stone-100">{thisWeek.toLocaleString()}</span>
