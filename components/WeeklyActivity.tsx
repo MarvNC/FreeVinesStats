@@ -81,7 +81,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
                     onFocus={(e) => !isFuture && handleMouseEnter(e, dateKey, value)}
                     onBlur={() => setHoveredCell(null)}
                     tabIndex={isFuture ? -1 : 0}
-                    className={`aspect-square rounded-none ${finalColor} cursor-crosshair hover:ring-1 hover:ring-primary/40 focus:ring-2 focus:ring-primary focus:outline-none touch-manipulation border border-white/5 dark:border-black/5`}
+                    className={`aspect-square rounded-sm ${finalColor} cursor-crosshair hover:ring-1 hover:ring-primary/40 focus:ring-2 focus:ring-primary focus:outline-none touch-manipulation border border-white/5 dark:border-black/5`}
                     title={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
                     aria-label={!isFuture ? `${dateKey}: ${value.toLocaleString()} items` : undefined}
                     role={!isFuture ? 'img' : undefined}
@@ -99,7 +99,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
 
       {hoveredCell && (
         <div
-          className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-stone-900/95 dark:bg-stone-100/95 text-stone-100 dark:text-stone-900 shadow-xl text-xs font-bold whitespace-nowrap rounded-lg border border-stone-700 dark:border-stone-300"
+          className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-stone-800/95 dark:bg-stone-200/95 text-stone-100 dark:text-stone-900 shadow-xl text-xs font-bold whitespace-nowrap rounded-lg border border-stone-700 dark:border-stone-300"
           style={{ left: hoveredCell.x, top: hoveredCell.y }}
         >
           <div className="opacity-60 text-[10px] mb-0.5">{hoveredCell.date}</div>

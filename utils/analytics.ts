@@ -724,7 +724,7 @@ export const processHeatMaps = (history: HistoryItem[], filter: DataFilter = 'al
 };
 
 export const getHeatColor = (value: number, max: number): string => {
-  if (value === 0) return 'bg-stone-100 dark:bg-stone-800';
+  if (value === 0) return 'bg-heat-0';
   const ratio = value / max;
   if (ratio < 0.2) return 'bg-heat-1';
   if (ratio < 0.4) return 'bg-heat-2';

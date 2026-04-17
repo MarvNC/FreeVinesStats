@@ -45,9 +45,9 @@ interface PulseChartProps {
 }
 
 const SERIES = [
-  { key: 'zeroEtv',    label: '0 ETV', color: '#a2495c' },
-  { key: 'lastChance', label: 'AFA',   color: '#c9a96e' },
-  { key: 'ai',         label: 'All Items', color: '#6b8f71' },
+  { key: 'zeroEtv',    label: '0 ETV', color: '#9e7a7a' },
+  { key: 'lastChance', label: 'AFA',   color: '#c4b896' },
+  { key: 'ai',         label: 'All Items', color: '#8cb092' },
 ] as const;
 
 interface TooltipState {
@@ -73,7 +73,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const [mousePos, setMousePos] = useState<MousePos>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const gridMajor  = isDark ? 'rgba(148,163,184,0.15)' : 'rgba(15,23,42,0.15)';
+  const gridMajor  = isDark ? 'rgba(168, 162, 158, 0.10)' : 'rgba(120, 113, 108, 0.12)';
   const axisColor  = isDark ? '#94a3b8' : '#64748b';
 
   useEffect(() => {
@@ -205,7 +205,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(15,23,42,0.08)',
+        borderColor: isDark ? 'rgba(168, 162, 158, 0.06)' : 'rgba(120, 113, 108, 0.06)',
         borderWidth: 1,
         borderDash: [2, 2],
         label: { display: false },
@@ -217,7 +217,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
         type: 'line',
         scaleID: 'x',
         value: ts,
-        borderColor: isDark ? 'rgba(148,163,184,0.3)' : 'rgba(15,23,42,0.3)',
+        borderColor: isDark ? 'rgba(168, 162, 158, 0.15)' : 'rgba(120, 113, 108, 0.15)',
         borderWidth: 1,
         label: { display: false },
       };
@@ -232,37 +232,37 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: '0 ETV',
           data: visibleData.map(d => ({ x: d.date, y: d.zeroEtv })),
-          backgroundColor: '#a2495c',
-          hoverBackgroundColor: '#c2586f',
+          backgroundColor: '#9e7a7a',
+          hoverBackgroundColor: '#af8a8a',
           stack: 's',
-          borderRadius: 0,
+          borderRadius: { topLeft: 2, topRight: 2 },
           borderSkipped: false,
           minBarLength: 2,
-          categoryPercentage: 0.8,
+          categoryPercentage: 0.9,
           barPercentage: 1,
         },
         {
           label: 'AFA',
           data: visibleData.map(d => ({ x: d.date, y: d.lastChance })),
-          backgroundColor: '#c9a96e',
-          hoverBackgroundColor: '#dec28a',
+          backgroundColor: '#c4b896',
+          hoverBackgroundColor: '#d2c7a6',
           stack: 's',
-          borderRadius: 0,
+          borderRadius: { topLeft: 2, topRight: 2 },
           borderSkipped: false,
           minBarLength: 2,
-          categoryPercentage: 0.8,
+          categoryPercentage: 0.9,
           barPercentage: 1,
         },
         {
           label: 'AI',
           data: visibleData.map(d => ({ x: d.date, y: d.ai })),
-          backgroundColor: '#6b8f71',
-          hoverBackgroundColor: '#80a886',
+          backgroundColor: '#8cb092',
+          hoverBackgroundColor: '#9dc0a3',
           stack: 's',
-          borderRadius: 0,
+          borderRadius: { topLeft: 2, topRight: 2 },
           borderSkipped: false,
           minBarLength: 2,
-          categoryPercentage: 0.8,
+          categoryPercentage: 0.9,
           barPercentage: 1,
         },
       ],
@@ -284,7 +284,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
           min: windowStart - halfStep,
           max: windowEnd   + halfStep,
           grid: { display: false },
-          border: { display: true, color: isDark ? '#475569' : '#cbd5e1' },
+          border: { display: false },
           ticks: {
             color: axisColor,
             font: { size: 10, weight: 700, family: "'Outfit', monospace" },

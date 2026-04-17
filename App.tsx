@@ -11,7 +11,6 @@ dayjs.extend(relativeTime);
 
 import ThemeToggle from './components/ThemeToggle';
 import useDarkMode from './hooks/useDarkMode';
-import StatCard from './components/StatCard';
 import SegmentedControl from './components/SegmentedControl';
 import useIsMobile from './hooks/useIsMobile';
 
@@ -25,6 +24,27 @@ const CardSkeleton: React.FC<{ height?: string }> = ({ height = 'h-64' }) => (
 );
 
 const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
+const LOADING_MESSAGES = [
+  'Polishing the magnifying glass...',
+  'Checking every shelf...',
+  'Counting the good stuff...',
+  'Flipping through the catalog...',
+];
+
+const formatSignedPercent = (value: number): string => {
+  if (value > 0) return `+${value}%`;
+  if (value < 0) return `${value}%`;
+  return '0%';
+};
+
+const formatTimeAgo = (updatedAt: Date, nowTs: number): string => {
+  const elapsedSec = Math.max(0, Math.floor((nowTs - updatedAt.getTime()) / 1000));
+  if (elapsedSec < 60) return `${elapsedSec}s ago`;
+  const elapsedMin = Math.floor(elapsedSec / 60);
+  if (elapsedMin < 60) return `${elapsedMin}m ago`;
+  const elapsedHr = Math.floor(elapsedMin / 60);
+  return `${elapsedHr}h ago`;
+};
 
 const App: React.FC = () => {
   const [rawData, setRawData] = useState<StatsData | null>(null);
@@ -34,6 +54,7 @@ const App: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1d');
   const [dataFilter, setDataFilter] = useState<DataFilter>('all');
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [clockTick, setClockTick] = useState<number>(Date.now());
   const isMobile = useIsMobile();
   const [, setTheme, theme] = useDarkMode();
 
@@ -71,6 +92,11 @@ const App: React.FC = () => {
     const interval = setInterval(loadData, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [loadData]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -131,12 +157,80 @@ const App: React.FC = () => {
     return result;
   }, [rawData, dataFilter]);
 
+  const loadingMessage = useMemo(() => {
+    const index = Math.floor(clockTick / 2400) % LOADING_MESSAGES.length;
+    return LOADING_MESSAGES[index];
+  }, [clockTick]);
+
+  const summarySentence = useMemo(() => {
+    const { lastHour, today, todayGrowth, thisWeek } = dashboardStats;
+    const nowHour = dayjs().hour();
+    const todayFormatted = today.toLocaleString();
+    const weekFormatted = thisWeek.toLocaleString();
+    const trendAbs = Math.abs(todayGrowth);
+    const trendDirection = todayGrowth >= 0 ? 'busier' : 'quieter';
+
+    const opening = (() => {
+      if (nowHour >= 5 && nowHour < 11) {
+        return <><span className="text-stone-600 dark:text-stone-400">Good morning - </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> drops in the last hour. </span></>;
+      }
+      if (nowHour >= 11 && nowHour < 17) {
+        return <><span className="text-stone-600 dark:text-stone-400">The afternoon rush brought </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> new items. </span></>;
+      }
+      if (nowHour >= 17 && nowHour < 22) {
+        return <><span className="text-stone-600 dark:text-stone-400">Evening hunt: </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> drops in the last hour. </span></>;
+      }
+      return <><span className="text-stone-600 dark:text-stone-400">Night owl mode - </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> items just landed. </span></>;
+    })();
+
+    if (lastHour === 0) {
+      return <span className="text-stone-600 dark:text-stone-400">It's been quiet - no drops in the last hour.</span>;
+    }
+
+    if (todayGrowth > 50) {
+      return (
+        <>
+          <span className="text-stone-600 dark:text-stone-400">Today's on fire - </span>
+          <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
+          <span className="text-stone-600 dark:text-stone-400"> drops so far, a whopping </span>
+          <span className="font-bold text-emerald-600">{todayGrowth}%</span>
+          <span className="text-stone-600 dark:text-stone-400"> above typical!</span>
+        </>
+      );
+    }
+
+    if (todayGrowth < -30) {
+      return (
+        <>
+          <span className="text-stone-600 dark:text-stone-400">Slow day - only </span>
+          <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
+          <span className="text-stone-600 dark:text-stone-400"> drops, </span>
+          <span className="font-bold text-rose-500">{trendAbs}%</span>
+          <span className="text-stone-600 dark:text-stone-400"> below the usual pace.</span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {opening}
+        <span className="text-stone-600 dark:text-stone-400">Today's shaping up to be </span>
+        <span className={`font-bold ${todayGrowth >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{trendAbs}%</span>
+        <span className="text-stone-600 dark:text-stone-400"> {trendDirection} than usual with </span>
+        <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
+        <span className="text-stone-600 dark:text-stone-400"> drops so far. This week we've tracked </span>
+        <span className="font-bold text-stone-900 dark:text-stone-100">{weekFormatted}</span>
+        <span className="text-stone-600 dark:text-stone-400">.</span>
+      </>
+    );
+  }, [dashboardStats]);
+
   if (loading && !rawData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background-light dark:bg-background-dark font-sans relative">
         <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
         <div className="w-12 h-12 border-4 border-stone-200 dark:border-stone-800 border-t-primary rounded-full animate-spin z-10"></div>
-        <p className="text-sm font-medium text-stone-500 dark:text-stone-400 z-10">Loading statistics...</p>
+        <p className="text-sm font-medium text-stone-500 dark:text-stone-400 z-10">{loadingMessage}</p>
       </div>
     );
   }
@@ -159,7 +253,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden bg-background-light dark:bg-background-dark">
       {/* Subtle warm noise texture overlay */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
       
@@ -178,17 +272,14 @@ const App: React.FC = () => {
             <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-sm font-medium text-stone-500 dark:text-stone-400">
               {dashboardStats.updatedAt && (
                 <div className="flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <button 
                     onClick={loadData} 
                     className="flex items-center gap-1.5 hover:text-stone-900 dark:hover:text-stone-100 transition-colors group"
                     title="Refresh data (R)"
                   >
                     <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-300" />
-                    <span className="hidden sm:inline">Updated {dayjs(dashboardStats.updatedAt).format('HH:mm:ss')}</span>
+                    <span className="hidden sm:inline">Refreshed {formatTimeAgo(dashboardStats.updatedAt, clockTick)}</span>
                   </button>
                 </div>
               )}
@@ -208,34 +299,21 @@ const App: React.FC = () => {
         {/* Stats Zone */}
         <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-0 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800">
-              <div className="sm:px-8">
-                <StatCard
-                  title="Last Hour"
-                  value={dashboardStats.lastHour}
-                  subValue="New items"
-                  numberColor="#a2495c"
-                />
-              </div>
-              <div className="pt-8 sm:pt-0 sm:px-8">
-                <StatCard
-                  title="Today"
-                  value={dashboardStats.today}
-                  subValue={`Median: ${dashboardStats.todayMedian}`}
-                  trend={dashboardStats.todayGrowth}
-                  numberColor="#c9a96e"
-                />
-              </div>
-              <div className="pt-8 sm:pt-0 sm:px-8">
-                <StatCard
-                  title="This Week"
-                  value={dashboardStats.thisWeek}
-                  subValue={`Median: ${dashboardStats.weekMedian}`}
-                  trend={dashboardStats.weekGrowth}
-                  numberColor="#6b8f71"
-                />
-              </div>
-            </div>
+            <p className="font-display text-xl md:text-2xl leading-relaxed max-w-5xl">
+              {isMobile ? (
+                <>
+                  <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.lastHour.toLocaleString()} new</span>
+                  <span className="text-stone-600 dark:text-stone-400"> · </span>
+                  <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.today.toLocaleString()} today</span>
+                  <span className="text-stone-600 dark:text-stone-400"> (</span>
+                  <span className={`font-bold ${dashboardStats.todayGrowth >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                    {formatSignedPercent(dashboardStats.todayGrowth)}
+                  </span>
+                  <span className="text-stone-600 dark:text-stone-400">) · </span>
+                  <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.thisWeek.toLocaleString()} this week</span>
+                </>
+              ) : summarySentence}
+            </p>
           </div>
         </section>
 
@@ -302,7 +380,7 @@ const App: React.FC = () => {
 
       <div className="w-full bg-background-light dark:bg-background-dark border-t border-stone-200 dark:border-stone-800 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <footer className="w-full pt-10 pb-8 flex flex-col items-center justify-center gap-4 text-center text-stone-500 dark:text-stone-400 text-sm font-medium">
+          <footer className="w-full pt-10 pb-8 flex flex-col items-start justify-center gap-4 text-left text-stone-500 dark:text-stone-400 text-sm font-medium">
             <a
               href="https://github.com/MarvNC/FreeVinesStats"
               target="_blank"
