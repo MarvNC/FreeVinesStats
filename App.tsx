@@ -266,10 +266,10 @@ const App: React.FC = () => {
           <div className="relative group ml-2 self-center">
             <Info size={16} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help transition-colors" />
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-              <p className="font-semibold mb-1">Vine Jargon Guide:</p>
-              <p><span className="font-medium">0 ETV</span> = $0 estimated tax value (free items)</p>
-              <p className="mt-1"><span className="font-medium">AFA</span> = Amazon Fulfilled (last chance items)</p>
-              <p className="mt-1"><span className="font-medium">AI</span> = AI-suggested items</p>
+              <p className="font-semibold mb-1">Filter Labels:</p>
+              <p><span className="font-medium">All Items</span> = AI items (default)</p>
+              <p className="mt-1"><span className="font-medium">0 ETV</span> = $0 estimated tax value (free items)</p>
+              <p className="mt-1"><span className="font-medium">AFA</span> = Available For All (all users)</p>
             </div>
           </div>
         </div>

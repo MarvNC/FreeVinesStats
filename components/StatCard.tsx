@@ -58,11 +58,11 @@ const StatCard: React.FC<StatCardProps> = ({
   const isHero = variant === 'hero';
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-2xl ${isHero ? 'p-6 sm:p-8' : 'p-4 sm:p-5'} shadow-sm border ${isHero ? 'border-l-4 border-l-primary border-slate-100 dark:border-l-primary dark:border-slate-700/80' : 'border-slate-100 dark:border-slate-700/80'} flex flex-row sm:flex-col items-center sm:items-start justify-between h-auto ${isHero ? 'sm:h-56' : 'sm:h-36'} relative overflow-hidden group hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.2)] hover:-translate-y-0.5 transition-all duration-200 gap-3 sm:gap-0 animate-slide-up ${isHero ? 'stagger-1' : ''}`}>
+    <div className={`bg-white dark:bg-slate-800 rounded-2xl ${isHero ? 'p-6 sm:p-8' : 'p-4 sm:p-5'} shadow-sm border border-slate-100 dark:border-slate-700/80 flex flex-row sm:flex-col items-center sm:items-start justify-between h-auto ${isHero ? 'sm:h-48' : 'sm:h-36'} relative overflow-hidden group hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.3)] dark:hover:shadow-[0_0_20px_-5px_rgba(43,140,238,0.2)] hover:-translate-y-0.5 transition-all duration-200 gap-3 sm:gap-0`}>
       
       {/* Decorative background icon - Desktop only */}
-      <div className={`absolute right-0 top-0 ${isHero ? 'p-4' : 'p-3'} ${isHero ? 'opacity-[0.12]' : 'opacity-[0.07]'} group-hover:opacity-[0.20] transition-opacity select-none pointer-events-none hidden sm:block`} aria-hidden="true">
-        <Icon size={isHero ? 120 : 72} className={iconColorClass} />
+      <div className={`absolute right-0 top-0 ${isHero ? 'p-4' : 'p-3'} opacity-[0.07] group-hover:opacity-[0.12] transition-opacity select-none pointer-events-none hidden sm:block`} aria-hidden="true">
+        <Icon size={isHero ? 112 : 72} className={iconColorClass} />
       </div>
 
       {/* Left side (Mobile) / Top side (Desktop) */}
