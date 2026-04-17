@@ -162,6 +162,14 @@ const App: React.FC = () => {
     return formatSummarySentenceText(pickSummaryStats(dashboardStats), clockTick);
   }, [clockTick, dashboardStats]);
 
+  const summarySentenceParts = useMemo(() => {
+    return summarySentence
+      .split('. ')
+      .map((segment) => segment.trim())
+      .filter(Boolean)
+      .map((segment) => (segment.endsWith('.') ? segment : `${segment}.`));
+  }, [summarySentence]);
+
   if (loading && !rawData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background-light dark:bg-background-dark font-sans relative">
@@ -247,7 +255,22 @@ const App: React.FC = () => {
                   <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.thisWeek.toLocaleString()} this week</span>
                 </>
                 ) : (
-                  <span className="text-stone-600 dark:text-stone-400">{summarySentence}</span>
+                  <span className="grid gap-1.5 max-w-5xl text-left">
+                    {summarySentenceParts.map((segment, index) => (
+                      <span
+                        key={`${segment}-${index}`}
+                        className={
+                          index === 0
+                            ? 'text-stone-700 dark:text-stone-300'
+                            : index === 1
+                              ? 'text-stone-600 dark:text-stone-400'
+                              : 'text-stone-500 dark:text-stone-500 text-lg md:text-xl'
+                        }
+                      >
+                        {segment}
+                      </span>
+                    ))}
+                  </span>
                 )}
             </p>
           </div>
