@@ -178,7 +178,9 @@ const PulseChart: React.FC<PulseChartProps> = ({
     if (timeframe === '1d') {
       xMajorLines.forEach(ts => map.set(ts, formatPstHourLabel(ts)));
     } else if (timeframe === '3d' || timeframe === '7d') {
-      const boundaries = [windowStart, ...xMajorLines, windowEnd];
+      const interiorMidnights = Array.from(new Set(xMajorLines.filter(ts => ts > windowStart && ts < windowEnd)))
+        .sort((a, b) => a - b);
+      const boundaries = [windowStart, ...interiorMidnights, windowEnd];
       for (let i = 0; i < boundaries.length - 1; i++) {
         const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
         map.set(xMid, formatPstWeekdayLabel(xMid).toUpperCase());
