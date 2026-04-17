@@ -17,23 +17,12 @@ export interface SummarySentenceParts {
   paceVariant: PaceVariant;
 }
 
-export interface SummarySentenceDisplayLine {
-  id: 'hour' | 'today' | 'week';
-  text: string;
-  tone: 'strong' | 'base' | 'subtle';
-}
-
-export interface SummarySentenceMobileRow {
-  id: 'hour' | 'today' | 'week';
-  label: string;
-  value: string;
-  trendText?: string;
-  trendTone?: 'positive' | 'negative' | 'neutral';
-}
-
 export interface SummarySentenceDisplay {
-  desktopLines: SummarySentenceDisplayLine[];
-  mobileRows: SummarySentenceMobileRow[];
+  firstSentence: string;
+  secondSentencePrefix: string;
+  trendText: string;
+  secondSentenceSuffix: string;
+  trendTone: 'positive' | 'negative' | 'neutral';
 }
 
 export const getSummarySentenceParts = (
@@ -122,54 +111,30 @@ export const formatSummarySentenceDisplay = (
   const thisWeek = formatCount(stats.thisWeek, locale);
   const trendPct = formatPercent(parts.trendAbs);
 
-  let trendText = 'on pace';
-  let trendTone: SummarySentenceMobileRow['trendTone'] = 'neutral';
+  let secondSentencePrefix = `Today sits at ${today} items, `;
+  const secondSentenceSuffix = `, with ${thisWeek} on the week.`;
+
+  if (parts.paceVariant === 'quiet') {
+    secondSentencePrefix = `Today is still quiet at ${today} items, `;
+  }
+
+  let trendText = 'right on usual pace';
+  let trendTone: SummarySentenceDisplay['trendTone'] = 'neutral';
 
   if (parts.trendDirection === 'above') {
-    trendText = `up ${trendPct} vs usual`;
+    trendText = `${trendPct} above usual pace`;
     trendTone = 'positive';
   } else if (parts.trendDirection === 'below') {
-    trendText = `down ${trendPct} vs usual`;
+    trendText = `${trendPct} below usual pace`;
     trendTone = 'negative';
   }
 
   return {
-    desktopLines: [
-      {
-        id: 'hour',
-        text: `Last hour: ${lastHour} ${parts.hourNoun} ${parts.hourVerb} added.`,
-        tone: 'strong'
-      },
-      {
-        id: 'today',
-        text: `Today: ${today} items so far, ${trendText}.`,
-        tone: 'base'
-      },
-      {
-        id: 'week',
-        text: `Week total: ${thisWeek} items.`,
-        tone: 'subtle'
-      }
-    ],
-    mobileRows: [
-      {
-        id: 'hour',
-        label: 'Last hour',
-        value: `${lastHour} ${parts.hourNoun}`
-      },
-      {
-        id: 'today',
-        label: 'Today',
-        value: `${today} items`,
-        trendText,
-        trendTone
-      },
-      {
-        id: 'week',
-        label: 'Week total',
-        value: `${thisWeek} items`
-      }
-    ]
+    firstSentence: `In the last hour, ${lastHour} ${parts.hourNoun} ${parts.hourVerb} added.`,
+    secondSentencePrefix,
+    trendText,
+    secondSentenceSuffix,
+    trendTone
   };
 };
 

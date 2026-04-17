@@ -37,9 +37,23 @@
     animation-delay: calc(var(--line-index, 0) * 90ms);
   }
 
-  .summary-line-dot {
-    animation: summary-dot-pulse 4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-    animation-delay: calc(var(--line-index, 0) * 140ms);
+  .summary-trend {
+    position: relative;
+    transition: color 240ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .summary-trend::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.1em;
+    height: 0.08em;
+    opacity: 0.6;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: trend-underline 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 260ms;
   }
 }
 
@@ -66,26 +80,92 @@
   }
 }
 
-@keyframes summary-dot-pulse {
-  0%,
-  70%,
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
+@keyframes trend-underline {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
   }
-  85% {
-    transform: scale(1.3);
-    opacity: 1;
+  to {
+    transform: scaleX(1);
+    opacity: 0.6;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .summary-line,
-  .summary-line-dot {
+  .summary-trend::after {
     animation: none;
     opacity: 1;
     transform: none;
   }
+}
+
+.summary-verse {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.summary-line-primary {
+  color: #44403c;
+  font-size: clamp(1.1rem, 1.05rem + 0.35vw, 1.45rem);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.summary-line-secondary {
+  color: #57534e;
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.25rem);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.summary-trend {
+  margin-inline: 0.2rem;
+  font-weight: 600;
+}
+
+.summary-trend-up {
+  color: #3f6f4a;
+}
+
+.summary-trend-up::after {
+  background: color-mix(in oklab, #3f6f4a 72%, transparent);
+}
+
+.summary-trend-down {
+  color: #8b5f2a;
+}
+
+.summary-trend-down::after {
+  background: color-mix(in oklab, #8b5f2a 72%, transparent);
+}
+
+.summary-trend-neutral {
+  color: #6b7280;
+}
+
+.summary-trend-neutral::after {
+  background: color-mix(in oklab, #6b7280 66%, transparent);
+}
+
+.dark .summary-line-primary {
+  color: #e7e5e4;
+}
+
+.dark .summary-line-secondary {
+  color: #d6d3d1;
+}
+
+.dark .summary-trend-up {
+  color: #7aa983;
+}
+
+.dark .summary-trend-down {
+  color: #d1a466;
+}
+
+.dark .summary-trend-neutral {
+  color: #b8b2ab;
 }
 
 .scrollbar-hide {

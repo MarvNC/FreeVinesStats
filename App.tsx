@@ -228,28 +228,26 @@ const App: React.FC = () => {
         <section className="w-full border-b border-stone-200 dark:border-stone-800 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10">
             <div className="font-display text-xl md:text-2xl leading-relaxed max-w-5xl">
-              <ul className="grid gap-2 sm:gap-2.5 max-w-[60ch] text-left summary-lines" aria-label="Summary stats">
-                {summarySentence.desktopLines.map((line, index) => (
-                  <li
-                    key={line.id}
-                    className="summary-line flex items-start gap-3"
-                    style={{ '--line-index': index } as React.CSSProperties}
+              <div className="summary-verse max-w-[64ch] text-left" aria-label="Summary stats">
+                <p className="summary-line summary-line-primary" style={{ '--line-index': 0 } as React.CSSProperties}>
+                  {summarySentence.firstSentence}
+                </p>
+                <p className="summary-line summary-line-secondary" style={{ '--line-index': 1 } as React.CSSProperties}>
+                  {summarySentence.secondSentencePrefix}
+                  <span
+                    className={`summary-trend ${
+                      summarySentence.trendTone === 'positive'
+                        ? 'summary-trend-up'
+                        : summarySentence.trendTone === 'negative'
+                          ? 'summary-trend-down'
+                          : 'summary-trend-neutral'
+                    }`}
                   >
-                    <span className="summary-line-dot mt-2 h-1.5 w-1.5 rounded-full bg-primary/70 dark:bg-primary"></span>
-                    <span
-                      className={
-                        line.tone === 'strong'
-                          ? 'text-stone-800 dark:text-stone-200'
-                          : line.tone === 'base'
-                            ? 'text-stone-700 dark:text-stone-300 text-lg md:text-xl'
-                            : 'text-stone-600 dark:text-stone-400 text-base md:text-lg'
-                      }
-                    >
-                      {line.text}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                    {summarySentence.trendText}
+                  </span>
+                  {summarySentence.secondSentenceSuffix}
+                </p>
+              </div>
             </div>
           </div>
         </section>
