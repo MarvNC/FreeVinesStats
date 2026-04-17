@@ -24,6 +24,8 @@ const CardSkeleton: React.FC<{ height?: string }> = ({ height = 'h-64' }) => (
   <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/80 ${height} w-full animate-pulse`} />
 );
 
+const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
+
 const App: React.FC = () => {
   const [rawData, setRawData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,7 @@ const App: React.FC = () => {
   const granularity = useMemo((): Granularity => {
     switch (timeframe) {
       case '1d': return isMobile ? '30m' : '15m'; // ~48 vs 96 bars
+      case '3d': return isMobile ? '1h' : '30m';   // ~72 vs 144 bars
       case '7d': return isMobile ? '4h' : '1h';   // ~42 vs 168 bars
       case '1m': return '1d';                     // ~30 bars
       case '3m': return '1d';                     // ~90 bars
@@ -63,7 +66,7 @@ const App: React.FC = () => {
     };
 
     loadData();
-    const interval = setInterval(loadData, 60000);
+    const interval = setInterval(loadData, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 

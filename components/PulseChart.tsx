@@ -390,7 +390,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
   }, [windowStart, windowEnd, intervalMs, axisColor, gridMajor, granularity, annotations, visibleData, xTickMap]);
 
 
-  const timeframeOptions: Option<Timeframe>[] = (['1d', '7d', '1m', '3m', '1y'] as Timeframe[]).map(tf => ({
+  const timeframeOptions: Option<Timeframe>[] = (['1d', '3d', '7d', '1m', '3m', '1y'] as Timeframe[]).map(tf => ({
     value: tf,
     label: tf,
   }));

@@ -838,6 +838,11 @@ export const getCalendarWindow = (anchorTs: number, timeframe: Timeframe): Calen
       const end = stepPstDay(start, 1);
       return { start, end };
     }
+    case '3d': {
+      const start = getPstDayStart(anchorTs);
+      const end = stepPstDay(start, 3);
+      return { start, end };
+    }
     case '7d': {
       const start = getPstWeekStartFor(anchorTs);
       const end = stepPstWeek(start, 1);
@@ -872,6 +877,7 @@ export const getCalendarWindow = (anchorTs: number, timeframe: Timeframe): Calen
 export const stepWindowAnchor = (anchorTs: number, timeframe: Timeframe, n: number): number => {
   switch (timeframe) {
     case '1d':  return stepPstDay(getPstDayStart(anchorTs), n);
+    case '3d':  return stepPstDay(getPstDayStart(anchorTs), n * 3);
     case '7d':  return stepPstWeek(getPstWeekStartFor(anchorTs), n);
     case '1m':  return stepPstMonth(getPstMonthStartFor(anchorTs), n);
     case '3m':  return stepPstMonth(getPstMonthStartFor(anchorTs), n);
@@ -889,6 +895,7 @@ export const getLiveAnchor = (timeframe: Timeframe): number => {
   const now = Date.now();
   switch (timeframe) {
     case '1d':  return getPstDayStart(now);
+    case '3d':  return getPstDayStart(now);
     case '7d':  return getPstWeekStartFor(now);
     case '1m':  return getPstMonthStartFor(now);
     case '3m':  return getPstMonthStartFor(now);
@@ -912,6 +919,7 @@ export const getLiveWindow = (timeframe: Timeframe): CalendarWindow => {
   const todayEnd   = stepPstDay(todayStart, 1);
   switch (timeframe) {
     case '1d':  return { start: todayStart, end: todayEnd };
+    case '3d':  return { start: stepPstDay(todayStart, -2), end: todayEnd };
     case '7d':  return { start: stepPstDay(todayStart, -6), end: todayEnd };
     case '1m':  return { start: stepPstDay(todayStart, -29), end: todayEnd };
     case '3m':  return { start: stepPstDay(todayStart, -89), end: todayEnd };
@@ -957,6 +965,15 @@ export const formatWindowLabel = (start: number, end: number, timeframe: Timefra
   switch (timeframe) {
     case '1d': {
       return `${WEEKDAY_SHORT[s.weekday]}, ${MONTH_SHORT[s.month]} ${s.day}`;
+    }
+    case '3d': {
+      if (s.month === e.month && s.year === e.year) {
+        return `${MONTH_SHORT[s.month]} ${s.day} – ${e.day}`;
+      }
+      if (s.year === e.year) {
+        return `${MONTH_SHORT[s.month]} ${s.day} – ${MONTH_SHORT[e.month]} ${e.day}`;
+      }
+      return `${MONTH_SHORT[s.month]} ${s.day} ${s.year} – ${MONTH_SHORT[e.month]} ${e.day} ${e.year}`;
     }
     case '7d': {
       if (s.month === e.month && s.year === e.year) {
