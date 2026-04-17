@@ -181,13 +181,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       const boundaries = [windowStart, ...xMajorLines, windowEnd];
       for (let i = 0; i < boundaries.length - 1; i++) {
         const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
-        const weekday = formatPstWeekdayLabel(xMid).toUpperCase();
-        if (timeframe === '3d') {
-          const day = pstDayFmt.format(new Date(xMid));
-          map.set(xMid, `${weekday} ${day}`);
-        } else {
-          map.set(xMid, weekday);
-        }
+        map.set(xMid, formatPstWeekdayLabel(xMid).toUpperCase());
       }
     } else if (timeframe === '1m') {
       xMajorLines.forEach(ts => {
