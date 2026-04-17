@@ -3,7 +3,7 @@ import { Github, CloudOff, RefreshCw, HelpCircle, X, Info, Sprout } from 'lucide
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
-import { getSummarySentenceParts, pickSummaryStats } from './utils/sentences';
+import { formatSummarySentenceText, pickSummaryStats } from './utils/sentences';
 
 import ThemeToggle from './components/ThemeToggle';
 import useDarkMode from './hooks/useDarkMode';
@@ -159,65 +159,7 @@ const App: React.FC = () => {
   }, [clockTick]);
 
   const summarySentence = useMemo(() => {
-    const { lastHour, today, thisWeek } = dashboardStats;
-    const summaryParts = getSummarySentenceParts(pickSummaryStats(dashboardStats), clockTick);
-    const trendClass = summaryParts.isPositiveTrend ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
-
-    const paceSentence = (() => {
-      if (summaryParts.paceVariant === 'quiet') {
-        return (
-          <span className="text-stone-600 dark:text-stone-400">
-            It is very quiet so far, with no drops yet today.
-          </span>
-        );
-      }
-
-      if (summaryParts.paceVariant === 'hot') {
-        return (
-          <>
-            <span className="text-stone-600 dark:text-stone-400">Today is running hot at </span>
-            <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
-            <span className="text-stone-600 dark:text-stone-400"> items, </span>
-            <span className={`font-bold ${trendClass}`}>{summaryParts.trendAbs}%</span>
-            <span className="text-stone-600 dark:text-stone-400"> ahead of its usual pace.</span>
-          </>
-        );
-      }
-
-      if (summaryParts.paceVariant === 'slow') {
-        return (
-          <>
-            <span className="text-stone-600 dark:text-stone-400">Today is moving slower at </span>
-            <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
-            <span className="text-stone-600 dark:text-stone-400"> items, </span>
-            <span className={`font-bold ${trendClass}`}>{summaryParts.trendAbs}%</span>
-            <span className="text-stone-600 dark:text-stone-400"> behind its usual pace.</span>
-          </>
-        );
-      }
-
-      return (
-        <>
-          <span className="text-stone-600 dark:text-stone-400">Today is </span>
-          <span className={`font-bold ${trendClass}`}>{summaryParts.trendAbs}%</span>
-          <span className="text-stone-600 dark:text-stone-400"> {summaryParts.trendDirection} its usual pace, with </span>
-          <span className="font-bold text-stone-900 dark:text-stone-100">{today.toLocaleString()}</span>
-          <span className="text-stone-600 dark:text-stone-400"> items so far.</span>
-        </>
-      );
-    })();
-
-    return (
-      <>
-        <span className="text-stone-600 dark:text-stone-400">{summaryParts.hourLead} In the past hour, </span>
-        <span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span>
-        <span className="text-stone-600 dark:text-stone-400"> {summaryParts.hourNoun} dropped. </span>
-        {paceSentence}
-        <span className="text-stone-600 dark:text-stone-400"> This week: </span>
-        <span className="font-bold text-stone-900 dark:text-stone-100">{thisWeek.toLocaleString()}</span>
-        <span className="text-stone-600 dark:text-stone-400"> items.</span>
-      </>
-    );
+    return formatSummarySentenceText(pickSummaryStats(dashboardStats), clockTick);
   }, [clockTick, dashboardStats]);
 
   if (loading && !rawData) {
@@ -304,7 +246,9 @@ const App: React.FC = () => {
                   <span className="text-stone-600 dark:text-stone-400">) · </span>
                   <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.thisWeek.toLocaleString()} this week</span>
                 </>
-              ) : summarySentence}
+                ) : (
+                  <span className="text-stone-600 dark:text-stone-400">{summarySentence}</span>
+                )}
             </p>
           </div>
         </section>

@@ -12,13 +12,16 @@ const assertSentenceQuality = (sentence: string): void => {
   expect(sentence).toMatch(/^[A-Z]/);
   expect(sentence).toMatch(/items?\./);
   expect(sentence).not.toMatch(/\s{2,}/);
-  expect(sentence).not.toMatch(/\biT\b|\bTODAY\b|\bIn\s+the\s+PAST\s+hour\b/);
-  expect(sentence).toContain('In the past hour,');
-  expect(sentence).toContain('This week:');
+  expect(sentence).not.toMatch(/\biT\b|\bTODAY\b|,\s+In\s+the\s+last\s+hour/);
+  expect(sentence).toContain('last hour');
+  expect(sentence).toContain('for this time of day');
+  expect(sentence).not.toContain('its usual pace');
+  expect(sentence).toContain('This week');
+  expect(sentence).toMatch(/\.$/);
 };
 
 describe('summary sentence copy', () => {
-  it('uses quiet copy when there are no drops yet today', () => {
+  it('matches copywriter quiet template', () => {
     const stats: SummarySentenceStats = {
       lastHour: 0,
       today: 0,
@@ -28,12 +31,12 @@ describe('summary sentence copy', () => {
 
     const sentence = formatSummarySentenceText(stats, MORNING_TS);
     expect(sentence).toBe(
-      'Good morning. In the past hour, 0 items dropped. It is very quiet so far, with no drops yet today. This week: 12 items.'
+      'In the last hour, 0 items were added. So far today, 0 items have appeared, which is 20% below usual pace for this time of day. This week stands at 12 items.'
     );
     assertSentenceQuality(sentence);
   });
 
-  it('uses hot pace copy for strong positive growth', () => {
+  it('matches copywriter strong positive template', () => {
     const stats: SummarySentenceStats = {
       lastHour: 42,
       today: 1_234,
@@ -43,12 +46,12 @@ describe('summary sentence copy', () => {
 
     const sentence = formatSummarySentenceText(stats, AFTERNOON_TS);
     expect(sentence).toBe(
-      'This afternoon, In the past hour, 42 items dropped. Today is running hot at 1,234 items, 67% ahead of its usual pace. This week: 9,876 items.'
+      'In the last hour, 42 items were added. Today is running 67% above usual for this time of day, with 1,234 items so far. This week is now at 9,876 items.'
     );
     assertSentenceQuality(sentence);
   });
 
-  it('uses slower pace copy for strong negative growth', () => {
+  it('matches copywriter strong negative template', () => {
     const stats: SummarySentenceStats = {
       lastHour: 9,
       today: 130,
@@ -58,12 +61,12 @@ describe('summary sentence copy', () => {
 
     const sentence = formatSummarySentenceText(stats, EVENING_TS);
     expect(sentence).toBe(
-      'This evening, In the past hour, 9 items dropped. Today is moving slower at 130 items, 41% behind its usual pace. This week: 1,500 items.'
+      'In the last hour, 9 items were added. Today is running 41% below usual for this time of day, with 130 items so far. This week totals 1,500 items.'
     );
     assertSentenceQuality(sentence);
   });
 
-  it('uses steady pace copy and singular noun where needed', () => {
+  it('matches copywriter neutral template', () => {
     const stats: SummarySentenceStats = {
       lastHour: 1,
       today: 80,
@@ -73,7 +76,37 @@ describe('summary sentence copy', () => {
 
     const sentence = formatSummarySentenceText(stats, NIGHT_TS);
     expect(sentence).toBe(
-      'Tonight, In the past hour, 1 item dropped. Today is 0% ahead of its usual pace, with 80 items so far. This week: 400 items.'
+      'In the last hour, 1 item was added. Today is exactly on pace for this time of day at 80 items (0%). This week is at 400 items.'
+    );
+    assertSentenceQuality(sentence);
+  });
+
+  it('matches copywriter steady positive template', () => {
+    const stats: SummarySentenceStats = {
+      lastHour: 4,
+      today: 260,
+      todayGrowth: 14,
+      thisWeek: 1_040
+    };
+
+    const sentence = formatSummarySentenceText(stats, AFTERNOON_TS);
+    expect(sentence).toBe(
+      'In the last hour, 4 items were added. Today is modestly ahead by 14% for this time of day, with 260 items so far. This week has reached 1,040 items.'
+    );
+    assertSentenceQuality(sentence);
+  });
+
+  it('matches copywriter steady negative template', () => {
+    const stats: SummarySentenceStats = {
+      lastHour: 2,
+      today: 180,
+      todayGrowth: -12,
+      thisWeek: 920
+    };
+
+    const sentence = formatSummarySentenceText(stats, EVENING_TS);
+    expect(sentence).toBe(
+      'In the last hour, 2 items were added. Today is modestly behind by 12% for this time of day, with 180 items so far. This week is at 920 items.'
     );
     assertSentenceQuality(sentence);
   });
@@ -88,11 +121,11 @@ describe('summary sentence copy', () => {
 
     const parts = getSummarySentenceParts(stats, MORNING_TS);
     expect(parts.trendAbs).toBe(0);
-    expect(parts.trendDirection).toBe('ahead of');
+    expect(parts.trendDirection).toBe('on');
     expect(parts.paceVariant).toBe('steady');
 
     const sentence = formatSummarySentenceText(stats, MORNING_TS);
-    expect(sentence).toContain('Today is 0% ahead of its usual pace');
+    expect(sentence).toContain('Today is exactly on pace for this time of day at 200 items (0%).');
     assertSentenceQuality(sentence);
   });
 

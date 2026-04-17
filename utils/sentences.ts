@@ -10,26 +10,17 @@ export interface SummarySentenceStats {
 export type PaceVariant = 'quiet' | 'hot' | 'slow' | 'steady';
 
 export interface SummarySentenceParts {
-  hourLead: string;
   hourNoun: 'item' | 'items';
+  hourVerb: 'was' | 'were';
   trendAbs: number;
-  trendDirection: 'ahead of' | 'behind';
+  trendDirection: 'above' | 'below' | 'on';
   paceVariant: PaceVariant;
-  isPositiveTrend: boolean;
 }
-
-const getHourLead = (hour: number): string => {
-  if (hour >= 5 && hour < 11) return 'Good morning.';
-  if (hour >= 11 && hour < 17) return 'This afternoon,';
-  if (hour >= 17 && hour < 22) return 'This evening,';
-  return 'Tonight,';
-};
 
 export const getSummarySentenceParts = (
   stats: SummarySentenceStats,
-  clockTs: number
+  _clockTs: number
 ): SummarySentenceParts => {
-  const nowHour = new Date(clockTs).getHours();
   const safeGrowth = Number.isFinite(stats.todayGrowth) ? stats.todayGrowth : 0;
   const trendAbs = Math.abs(safeGrowth);
 
@@ -42,13 +33,14 @@ export const getSummarySentenceParts = (
     paceVariant = 'slow';
   }
 
+  const trendDirection: SummarySentenceParts['trendDirection'] = safeGrowth > 0 ? 'above' : safeGrowth < 0 ? 'below' : 'on';
+
   return {
-    hourLead: getHourLead(nowHour),
     hourNoun: stats.lastHour === 1 ? 'item' : 'items',
+    hourVerb: stats.lastHour === 1 ? 'was' : 'were',
     trendAbs,
-    trendDirection: safeGrowth >= 0 ? 'ahead of' : 'behind',
-    paceVariant,
-    isPositiveTrend: safeGrowth >= 0
+    trendDirection,
+    paceVariant
   };
 };
 
@@ -63,19 +55,36 @@ export const formatSummarySentenceText = (
   const lastHour = formatCount(stats.lastHour, locale);
   const today = formatCount(stats.today, locale);
   const thisWeek = formatCount(stats.thisWeek, locale);
+  const trendPct = `${parts.trendAbs}%`;
+  const quietTrend = parts.trendDirection === 'above'
+    ? `${trendPct} above usual pace`
+    : parts.trendDirection === 'below'
+      ? `${trendPct} below usual pace`
+      : 'exactly on pace';
 
-  let paceSentence = '';
+  const firstSentence = `In the last hour, ${lastHour} ${parts.hourNoun} ${parts.hourVerb} added.`;
+
   if (parts.paceVariant === 'quiet') {
-    paceSentence = 'It is very quiet so far, with no drops yet today.';
-  } else if (parts.paceVariant === 'hot') {
-    paceSentence = `Today is running hot at ${today} items, ${parts.trendAbs}% ahead of its usual pace.`;
-  } else if (parts.paceVariant === 'slow') {
-    paceSentence = `Today is moving slower at ${today} items, ${parts.trendAbs}% behind its usual pace.`;
-  } else {
-    paceSentence = `Today is ${parts.trendAbs}% ${parts.trendDirection} its usual pace, with ${today} items so far.`;
+    return `${firstSentence} So far today, ${today} items have appeared, which is ${quietTrend} for this time of day. This week stands at ${thisWeek} items.`;
   }
 
-  return `${parts.hourLead} In the past hour, ${lastHour} ${parts.hourNoun} dropped. ${paceSentence} This week: ${thisWeek} items.`;
+  if (parts.paceVariant === 'hot') {
+    return `${firstSentence} Today is running ${trendPct} above usual for this time of day, with ${today} items so far. This week is now at ${thisWeek} items.`;
+  }
+
+  if (parts.paceVariant === 'slow') {
+    return `${firstSentence} Today is running ${trendPct} below usual for this time of day, with ${today} items so far. This week totals ${thisWeek} items.`;
+  }
+
+  if (parts.trendDirection === 'on') {
+    return `${firstSentence} Today is exactly on pace for this time of day at ${today} items (${trendPct}). This week is at ${thisWeek} items.`;
+  }
+
+  if (parts.trendDirection === 'above') {
+    return `${firstSentence} Today is modestly ahead by ${trendPct} for this time of day, with ${today} items so far. This week has reached ${thisWeek} items.`;
+  }
+
+  return `${firstSentence} Today is modestly behind by ${trendPct} for this time of day, with ${today} items so far. This week is at ${thisWeek} items.`;
 };
 
 export const pickSummaryStats = (stats: DashboardStats): SummarySentenceStats => ({
