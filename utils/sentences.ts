@@ -17,6 +17,25 @@ export interface SummarySentenceParts {
   paceVariant: PaceVariant;
 }
 
+export interface SummarySentenceDisplayLine {
+  id: 'hour' | 'today' | 'week';
+  text: string;
+  tone: 'strong' | 'base' | 'subtle';
+}
+
+export interface SummarySentenceMobileRow {
+  id: 'hour' | 'today' | 'week';
+  label: string;
+  value: string;
+  trendText?: string;
+  trendTone?: 'positive' | 'negative' | 'neutral';
+}
+
+export interface SummarySentenceDisplay {
+  desktopLines: SummarySentenceDisplayLine[];
+  mobileRows: SummarySentenceMobileRow[];
+}
+
 export const getSummarySentenceParts = (
   stats: SummarySentenceStats,
   _clockTs: number
@@ -46,6 +65,12 @@ export const getSummarySentenceParts = (
 
 const formatCount = (value: number, locale: string): string => value.toLocaleString(locale);
 
+const formatPercent = (value: number): string => {
+  const absValue = Math.abs(value);
+  const rounded = Number.isInteger(absValue) ? absValue.toString() : absValue.toFixed(1);
+  return `${rounded}%`;
+};
+
 export const formatSummarySentenceText = (
   stats: SummarySentenceStats,
   clockTs: number,
@@ -55,7 +80,7 @@ export const formatSummarySentenceText = (
   const lastHour = formatCount(stats.lastHour, locale);
   const today = formatCount(stats.today, locale);
   const thisWeek = formatCount(stats.thisWeek, locale);
-  const trendPct = `${parts.trendAbs}%`;
+  const trendPct = formatPercent(parts.trendAbs);
   const quietTrend = parts.trendDirection === 'above'
     ? `${trendPct} above usual pace`
     : parts.trendDirection === 'below'
@@ -85,6 +110,67 @@ export const formatSummarySentenceText = (
   }
 
   return `${firstSentence} Today is modestly behind by ${trendPct} for this time of day, with ${today} items so far. This week is at ${thisWeek} items.`;
+};
+
+export const formatSummarySentenceDisplay = (
+  stats: SummarySentenceStats,
+  locale = 'en-US'
+): SummarySentenceDisplay => {
+  const parts = getSummarySentenceParts(stats, Date.now());
+  const lastHour = formatCount(stats.lastHour, locale);
+  const today = formatCount(stats.today, locale);
+  const thisWeek = formatCount(stats.thisWeek, locale);
+  const trendPct = formatPercent(parts.trendAbs);
+
+  let trendText = 'on pace';
+  let trendTone: SummarySentenceMobileRow['trendTone'] = 'neutral';
+
+  if (parts.trendDirection === 'above') {
+    trendText = `up ${trendPct} vs usual`;
+    trendTone = 'positive';
+  } else if (parts.trendDirection === 'below') {
+    trendText = `down ${trendPct} vs usual`;
+    trendTone = 'negative';
+  }
+
+  return {
+    desktopLines: [
+      {
+        id: 'hour',
+        text: `Last hour: ${lastHour} ${parts.hourNoun} ${parts.hourVerb} added.`,
+        tone: 'strong'
+      },
+      {
+        id: 'today',
+        text: `Today: ${today} items so far, ${trendText}.`,
+        tone: 'base'
+      },
+      {
+        id: 'week',
+        text: `Week total: ${thisWeek} items.`,
+        tone: 'subtle'
+      }
+    ],
+    mobileRows: [
+      {
+        id: 'hour',
+        label: 'Last hour',
+        value: `${lastHour} ${parts.hourNoun}`
+      },
+      {
+        id: 'today',
+        label: 'Today',
+        value: `${today} items`,
+        trendText,
+        trendTone
+      },
+      {
+        id: 'week',
+        label: 'Week total',
+        value: `${thisWeek} items`
+      }
+    ]
+  };
 };
 
 export const pickSummaryStats = (stats: DashboardStats): SummarySentenceStats => ({
