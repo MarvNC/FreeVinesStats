@@ -25,17 +25,9 @@
   100% { transform: scale(1); }
 }
 
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .animate-pop {
     animation: pop 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  }
-  .animate-scanline {
-    animation: scanline 8s linear infinite;
   }
 }
 
@@ -48,13 +40,12 @@
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
 .animate-fade-in { animation: fade-in 0.2s ease-out; }
 .animate-zoom-in-95 { animation: zoom-in-95 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
-.animate-blink { animation: blink 1s step-end infinite; }
+
+.font-serif {
+  font-family: 'Playfair Display', serif;
+}
 
 .scrollbar-hide {
   -ms-overflow-style: none;

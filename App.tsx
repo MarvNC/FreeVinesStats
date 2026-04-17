@@ -133,87 +133,94 @@ const App: React.FC = () => {
 
   if (loading && !rawData) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark font-mono">
-        <div className="text-primary animate-pulse text-2xl font-bold">_</div>
-        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest animate-pulse">INIT_SYSTEM...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background-light dark:bg-background-dark font-sans">
+        <div className="w-12 h-12 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading statistics...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background-light dark:bg-background-dark text-slate-500 font-mono">
-        <CloudOff size={36} className="text-rose-400" />
-        <p className="text-sm font-bold uppercase">ERR: {error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark text-slate-600 dark:text-slate-400 font-sans px-4 text-center">
+        <CloudOff size={48} className="text-rose-400 mb-2" />
+        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-white">Unable to Load Data</h2>
+        <p className="text-sm max-w-md">{error}</p>
+        <button 
+          onClick={loadData}
+          className="mt-4 px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium rounded-full hover:opacity-90 transition-opacity"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden">
-      {/* Scanline & Grid Effect */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] z-50 bg-[linear-gradient(to_bottom,transparent_0%,transparent_50%,#000_50%,#000_100%)] [background-size:100%_4px]"></div>
-      <div className="fixed inset-0 pointer-events-none z-50 bg-[linear-gradient(transparent_0%,rgba(43,140,238,0.05)_50%,transparent_100%)] h-32 w-full animate-scanline opacity-30"></div>
-
-      <div className="w-full max-w-7xl px-4 sm:px-6 md:px-8 relative z-10 flex flex-col">
-        {/* Top Control Bar / Header */}
-        <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 sm:py-8 border-b-2 border-slate-900 dark:border-slate-100 mb-2 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2">
-              <ChartNoAxesCombined size={24} />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display uppercase">
-              FreeVines<span className="text-primary">Stats</span>
-            </h1>
-          </div>
-
-          <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-[11px] font-bold font-mono text-slate-500 dark:text-slate-400 uppercase">
-            {dashboardStats.updatedAt && (
-              <div className="flex items-center gap-2.5">
-                <span className="text-primary font-bold text-[10px] animate-blink">_LIVE</span>
-                <button 
-                  onClick={loadData} 
-                  className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors group"
-                  title="Refresh data (R)"
-                >
-                  <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-300" />
-                  <span className="hidden sm:inline">UPDATED {dayjs(dashboardStats.updatedAt).format('HH:mm:ss')}</span>
-                </button>
+    <div className="min-h-screen flex flex-col pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden">
+      {/* Header Zone */}
+      <div className="w-full border-b border-slate-300 dark:border-slate-800 bg-background-light dark:bg-background-dark">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2">
+                <ChartNoAxesCombined size={24} />
               </div>
-            )}
-            <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
-            <button onClick={() => setShowShortcuts(true)} className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5">
-              <HelpCircle size={14} />
-              <span className="hidden sm:inline">KEYS</span> [?]
-            </button>
-            <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
-            <ThemeToggle />
-          </div>
-        </header>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-serif">
+                FreeVines<span className="text-primary">Stats</span>
+              </h1>
+            </div>
 
-        <main className="w-full flex flex-col gap-0">
-          {/* Dense Ticker Bar & Filters */}
-          <section className="flex flex-col xl:flex-row xl:items-center justify-between py-5 border-b border-slate-300 dark:border-slate-700 gap-6">
-            <div className="flex flex-wrap items-center gap-x-6 sm:gap-x-8 gap-y-4">
+            <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+              {dashboardStats.updatedAt && (
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <button 
+                    onClick={loadData} 
+                    className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors group"
+                    title="Refresh data (R)"
+                  >
+                    <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-300" />
+                    <span className="hidden sm:inline uppercase tracking-wider text-[10px] font-bold">Updated {dayjs(dashboardStats.updatedAt).format('HH:mm:ss')}</span>
+                  </button>
+                </div>
+              )}
+              <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
+              <button onClick={() => setShowShortcuts(true)} className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold">
+                <HelpCircle size={14} />
+                <span className="hidden sm:inline">Keys</span> [?]
+              </button>
+              <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
+              <ThemeToggle />
+            </div>
+          </header>
+        </div>
+      </div>
+
+      <main className="w-full flex flex-col">
+        {/* Ticker Zone - Warm Tint */}
+        <section className="w-full bg-orange-50/50 dark:bg-orange-950/10 border-b border-slate-300 dark:border-slate-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 xl:py-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div className="flex flex-wrap items-center gap-x-8 sm:gap-x-12 gap-y-6">
               <StatCard 
-                title="LAST_HOUR" 
+                title="Last Hour" 
                 value={dashboardStats.lastHour} 
                 subValue="New Items" 
                 icon={Clock}
                 iconColorClass="text-primary"
               />
-              <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-700"></div>
+              <div className="hidden sm:block w-px h-12 bg-slate-300 dark:bg-slate-700/50"></div>
               <StatCard 
-                title="TODAY" 
+                title="Today" 
                 value={dashboardStats.today} 
                 subValue={`vs Median (${dashboardStats.todayMedian})`}
                 trend={dashboardStats.todayGrowth}
                 icon={TrendingUp}
                 iconColorClass="text-emerald-500"
               />
-              <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-700"></div>
+              <div className="hidden sm:block w-px h-12 bg-slate-300 dark:bg-slate-700/50"></div>
               <StatCard 
-                title="THIS_WEEK" 
+                title="This Week" 
                 value={dashboardStats.thisWeek} 
                 subValue={`vs Median (${dashboardStats.weekMedian})`}
                 trend={dashboardStats.weekGrowth}
@@ -223,7 +230,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">FILTER:</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Filter:</span>
               <SegmentedControl 
                 options={[
                   { value: 'all', label: 'All' },
@@ -237,18 +244,20 @@ const App: React.FC = () => {
               />
               <div className="relative group ml-1 hidden sm:block">
                 <Info size={16} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help transition-colors" />
-                <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] rounded-none border border-slate-700 dark:border-slate-300 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 font-mono tracking-wide">
-                  <p className="font-bold mb-2 border-b border-slate-700 dark:border-slate-200 pb-2">FILTER_LABELS</p>
+                <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-none border border-slate-700 dark:border-slate-300 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 tracking-wide">
+                  <p className="font-bold mb-2 border-b border-slate-700 dark:border-slate-200 pb-2 uppercase text-[10px] tracking-widest">Filter Labels</p>
                   <p className="mt-2"><span className="text-primary font-bold">ALL</span> = AI ITEMS (DEFAULT)</p>
                   <p className="mt-2"><span className="text-rose-400 font-bold">0_ETV</span> = $0 TAX VALUE</p>
                   <p className="mt-2"><span className="text-orange-400 font-bold">AFA</span> = AVAILABLE FOR ALL</p>
                 </div>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Chart Section */}
-          <section className="py-8 border-b border-slate-300 dark:border-slate-700">
+        {/* Pulse Chart Zone - Cool Tint */}
+        <section className="w-full bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-300 dark:border-slate-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 lg:py-14">
             <Suspense fallback={<CardSkeleton height="h-96" />}>
               <PulseChart 
                 data={chartData} 
@@ -257,10 +266,12 @@ const App: React.FC = () => {
                 onTimeframeChange={setTimeframe} 
               />
             </Suspense>
-          </section>
+          </div>
+        </section>
 
-          {/* Heatmaps Section (2-column grid) */}
-          <section className="py-8 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        {/* Heatmaps Zone - Asymmetric grid */}
+        <section className="w-full bg-background-light dark:bg-background-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 lg:py-14 grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 lg:gap-12">
             <Suspense fallback={<CardSkeleton height="h-72" />}>
               <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
             </Suspense>
@@ -272,9 +283,11 @@ const App: React.FC = () => {
                 maxMean={heatMapData.maxHourlyMean}
               />
             </Suspense>
-          </section>
-        </main>
+          </div>
+        </section>
+      </main>
 
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <footer className="w-full pt-16 pb-8 flex flex-col items-center justify-center gap-4 text-center text-slate-400 dark:text-slate-500 font-mono uppercase text-[10px] tracking-widest font-bold">
           <a 
             href="https://github.com/MarvNC/FreeVinesStats" 

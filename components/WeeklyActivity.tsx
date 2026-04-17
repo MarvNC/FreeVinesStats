@@ -32,13 +32,13 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
   };
 
   return (
-    <div className="flex flex-col w-full overflow-visible relative font-mono">
-      <div className="flex justify-between items-center mb-4">
+    <div className="flex flex-col w-full overflow-visible relative">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display uppercase tracking-widest flex items-center gap-2">
-            <span className="text-primary font-bold">/</span> WEEKLY_ACTIVITY
+          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white font-serif flex items-center gap-2">
+            Weekly Activity
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase mt-1 font-bold">PST · LAST 24 WEEKS</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">PST · Last 24 Weeks</p>
         </div>
       </div>
       

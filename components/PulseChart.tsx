@@ -396,27 +396,27 @@ const PulseChart: React.FC<PulseChartProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-6">
       {/* Header / Control Strip */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 font-mono">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white font-display uppercase tracking-widest flex items-center gap-2">
-              <span className="text-primary font-bold">/</span> THE_PULSE
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white font-serif flex items-center gap-2">
+              The Pulse
             </h2>
 
             {/* Series legend with totals */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ml-2 mt-1">
               {seriesTotals.map(({ key, label, color, total }) => (
-                <span key={key} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  <span className="inline-block size-2" style={{ backgroundColor: color }} aria-hidden="true" />
-                  {label} <span className="text-slate-900 dark:text-white ml-0.5">[{total.toLocaleString()}]</span>
+                <span key={key} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <span className="inline-block size-2 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
+                  {label.replace('_', ' ')} <span className="text-slate-900 dark:text-white ml-0.5 tabular-nums">{total.toLocaleString()}</span>
                 </span>
               ))}
             </div>
           </div>
           
-          <div className="flex items-center gap-2 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
             <span>{windowLabel}</span>
             <span className="opacity-50">|</span>
             <span>PST</span>
@@ -430,15 +430,15 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={stepBack}
               disabled={!canStepBack}
               aria-label="Previous period"
-              className="flex items-center justify-center h-7 w-8 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-l-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={16} />
             </button>
             <button
               onClick={goLive}
               disabled={isLive}
               aria-label="Jump to current period"
-              className="flex items-center justify-center h-7 px-3 border-y border-slate-300 dark:border-slate-700 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors uppercase tracking-widest"
+              className="flex items-center justify-center h-8 px-4 border-y border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
             >
               Today
             </button>
@@ -446,9 +446,9 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={stepForward}
               disabled={!canStepForward}
               aria-label="Next period"
-              className="flex items-center justify-center h-7 w-8 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-r-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={16} />
             </button>
           </div>
 

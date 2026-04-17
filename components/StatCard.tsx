@@ -15,6 +15,7 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ 
   title, 
   value, 
+  subValue,
   trend, 
   icon: Icon, 
   iconColorClass
@@ -46,24 +47,31 @@ const StatCard: React.FC<StatCardProps> = ({
   }, [value]);
 
   return (
-    <div className="flex items-center gap-2 font-mono whitespace-nowrap group hover:bg-slate-100 dark:hover:bg-slate-800/50 p-1 -m-1 transition-colors">
-      <Icon size={14} className={iconColorClass} />
-      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{title}:</span>
-      <span className={`text-base font-extrabold text-slate-900 dark:text-white tabular-nums leading-none ${animate ? 'animate-pop' : ''}`}>
+    <div className="flex flex-col gap-1 group">
+      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-medium tracking-wide uppercase">
+        <Icon size={14} className={iconColorClass} />
+        <span>{title}</span>
+      </div>
+      <div className={`text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 dark:text-white tabular-nums tracking-tight leading-none ${animate ? 'animate-pop' : ''}`}>
         {value.toLocaleString()}
-      </span>
-      {trend !== undefined && (
-        <span className={`flex items-center text-[11px] font-bold tabular-nums ml-1 ${trendColorText}`}>
-          {trend >= 100 ? (
-            <Flame size={12} className="mr-0.5" />
-          ) : isPositive ? (
-            <ArrowUp size={12} className="mr-0.5" />
-          ) : (
-            <ArrowDown size={12} className="mr-0.5" />
-          )}
-          {Math.abs(trend)}%
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        {trend !== undefined && (
+          <span className={`flex items-center text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-800 ${trendColorText}`}>
+            {trend >= 100 ? (
+              <Flame size={12} className="mr-0.5" />
+            ) : isPositive ? (
+              <ArrowUp size={12} className="mr-0.5" />
+            ) : (
+              <ArrowDown size={12} className="mr-0.5" />
+            )}
+            {Math.abs(trend)}%
+          </span>
+        )}
+        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+          {subValue}
         </span>
-      )}
+      </div>
     </div>
   );
 };
