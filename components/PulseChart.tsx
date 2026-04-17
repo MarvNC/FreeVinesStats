@@ -149,6 +149,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const xMajorLines = useMemo(() => {
     switch (timeframe) {
       case '1d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 4);
+      case '3d': return getPstMidnightTimestamps(windowStart, windowEnd);
       case '7d': return getPstMidnightTimestamps(windowStart, windowEnd);
       case '1m': return getPstWeekStartTimestamps(windowStart, windowEnd);
       case '3m':
@@ -160,6 +161,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
   const xMinorLines = useMemo(() => {
     switch (timeframe) {
       case '1d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 1);
+      case '3d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 6);
       case '7d': return getPstHourAlignedTimestamps(windowStart, windowEnd, 6);
       case '1m': return getPstMidnightTimestamps(windowStart, windowEnd);
       case '3m': return getPstWeekStartTimestamps(windowStart, windowEnd);
@@ -175,11 +177,17 @@ const PulseChart: React.FC<PulseChartProps> = ({
 
     if (timeframe === '1d') {
       xMajorLines.forEach(ts => map.set(ts, formatPstHourLabel(ts)));
-    } else if (timeframe === '7d') {
+    } else if (timeframe === '3d' || timeframe === '7d') {
       const boundaries = [windowStart, ...xMajorLines, windowEnd];
       for (let i = 0; i < boundaries.length - 1; i++) {
         const xMid = Math.round((boundaries[i] + boundaries[i + 1]) / 2);
-        map.set(xMid, formatPstWeekdayLabel(xMid).toUpperCase());
+        const weekday = formatPstWeekdayLabel(xMid).toUpperCase();
+        if (timeframe === '3d') {
+          const day = pstDayFmt.format(new Date(xMid));
+          map.set(xMid, `${weekday} ${day}`);
+        } else {
+          map.set(xMid, weekday);
+        }
       }
     } else if (timeframe === '1m') {
       xMajorLines.forEach(ts => {
