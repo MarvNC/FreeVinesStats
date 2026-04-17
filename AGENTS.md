@@ -184,6 +184,8 @@ docs: update AGENTS.md
 Run `bunx commitlint --edit` locally to validate a message before pushing.
 Do not blindly commit working states. Explicitly `git add` exactly the files you intended to change. NEVER commit artifact files or temporary screenshot images (e.g. `*.png`, `.playwright-cli`).
 
+**Note**: other agents may be simultaneously working on the project. Commit only your changes.
+
 ---
 
 ## Configuration Notes
