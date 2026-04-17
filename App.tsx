@@ -3,11 +3,6 @@ import { Github, CloudOff, RefreshCw, HelpCircle, X, Info, Sprout } from 'lucide
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-// Initialize plugins locally as well to ensure availability in component render
-dayjs.extend(relativeTime);
 
 import ThemeToggle from './components/ThemeToggle';
 import useDarkMode from './hooks/useDarkMode';
@@ -164,61 +159,36 @@ const App: React.FC = () => {
 
   const summarySentence = useMemo(() => {
     const { lastHour, today, todayGrowth, thisWeek } = dashboardStats;
-    const nowHour = dayjs().hour();
     const todayFormatted = today.toLocaleString();
     const weekFormatted = thisWeek.toLocaleString();
     const trendAbs = Math.abs(todayGrowth);
-    const trendDirection = todayGrowth >= 0 ? 'busier' : 'quieter';
+    const trendDirection = todayGrowth >= 0 ? 'ahead of' : 'behind';
+    const trendClass = todayGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400';
 
-    const opening = (() => {
-      if (nowHour >= 5 && nowHour < 11) {
-        return <><span className="text-stone-600 dark:text-stone-400">Good morning - </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> drops in the last hour. </span></>;
+    const paceLead = (() => {
+      if (todayGrowth > 50) {
+        return 'It is an on-fire stretch. ';
       }
-      if (nowHour >= 11 && nowHour < 17) {
-        return <><span className="text-stone-600 dark:text-stone-400">The afternoon rush brought </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> new items. </span></>;
+      if (todayGrowth < -30) {
+        return 'It is a slower stretch right now. ';
       }
-      if (nowHour >= 17 && nowHour < 22) {
-        return <><span className="text-stone-600 dark:text-stone-400">Evening hunt: </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> drops in the last hour. </span></>;
+      if (lastHour <= 3) {
+        return 'It is a quiet hour so far. ';
       }
-      return <><span className="text-stone-600 dark:text-stone-400">Night owl mode - </span><span className="font-bold text-stone-900 dark:text-stone-100">{lastHour.toLocaleString()}</span><span className="text-stone-600 dark:text-stone-400"> items just landed. </span></>;
+      return '';
     })();
 
-    if (lastHour === 0) {
-      return <span className="text-stone-600 dark:text-stone-400">It's been quiet - no drops in the last hour.</span>;
-    }
-
-    if (todayGrowth > 50) {
-      return (
-        <>
-          <span className="text-stone-600 dark:text-stone-400">Today's on fire - </span>
-          <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
-          <span className="text-stone-600 dark:text-stone-400"> drops so far, a whopping </span>
-          <span className="font-bold text-emerald-600">{todayGrowth}%</span>
-          <span className="text-stone-600 dark:text-stone-400"> above typical!</span>
-        </>
-      );
-    }
-
-    if (todayGrowth < -30) {
-      return (
-        <>
-          <span className="text-stone-600 dark:text-stone-400">Slow day - only </span>
-          <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
-          <span className="text-stone-600 dark:text-stone-400"> drops, </span>
-          <span className="font-bold text-rose-500">{trendAbs}%</span>
-          <span className="text-stone-600 dark:text-stone-400"> below the usual pace.</span>
-        </>
-      );
-    }
+    const lastHourSentence = lastHour === 0
+      ? 'In the last hour, no items dropped. '
+      : `In the last hour, ${lastHour.toLocaleString()} items dropped. `;
 
     return (
       <>
-        {opening}
-        <span className="text-stone-600 dark:text-stone-400">Today's shaping up to be </span>
-        <span className={`font-bold ${todayGrowth >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{trendAbs}%</span>
-        <span className="text-stone-600 dark:text-stone-400"> {trendDirection} than usual with </span>
+        <span className="text-stone-600 dark:text-stone-400">{paceLead}{lastHourSentence}Today is </span>
+        <span className={`font-bold ${trendClass}`}>{trendAbs}%</span>
+        <span className="text-stone-600 dark:text-stone-400"> {trendDirection} your usual pace at </span>
         <span className="font-bold text-stone-900 dark:text-stone-100">{todayFormatted}</span>
-        <span className="text-stone-600 dark:text-stone-400"> drops so far. This week we've tracked </span>
+        <span className="text-stone-600 dark:text-stone-400"> items. This week: </span>
         <span className="font-bold text-stone-900 dark:text-stone-100">{weekFormatted}</span>
         <span className="text-stone-600 dark:text-stone-400">.</span>
       </>
@@ -253,20 +223,17 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden bg-background-light dark:bg-background-dark">
+    <div className="min-h-screen flex flex-col pb-10 sm:pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden bg-background-light dark:bg-background-dark">
       {/* Subtle warm noise texture overlay */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}></div>
       
       {/* Header Zone */}
-      <div className="w-full border-b border-stone-200 dark:border-stone-800 bg-background-light dark:bg-background-dark relative z-10">
+      <div className="w-full border-b border-stone-200 dark:border-stone-800 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-4">
-            <div className="flex items-center gap-2.5 text-stone-800 dark:text-stone-100">
-              <Sprout size={22} className="text-primary" strokeWidth={2.5} />
-              <h1 className="text-2xl sm:text-3xl tracking-tight font-display">
-                <span className="font-bold">FreeVines</span>
-                <span className="font-light">Stats</span>
-              </h1>
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 sm:py-6 gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 text-stone-800 dark:text-stone-100">
+              <Sprout size={18} className="text-primary/90" strokeWidth={1.9} />
+              <h1 className="text-2xl sm:text-3xl tracking-tight font-display font-semibold">FreeVines Stats</h1>
             </div>
 
             <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-sm font-medium text-stone-500 dark:text-stone-400">
@@ -297,8 +264,8 @@ const App: React.FC = () => {
 
       <main className="w-full flex flex-col relative z-10">
         {/* Stats Zone */}
-        <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10">
+        <section className="w-full border-b border-stone-200 dark:border-stone-800 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10">
             <p className="font-display text-xl md:text-2xl leading-relaxed max-w-5xl">
               {isMobile ? (
                 <>
@@ -306,7 +273,7 @@ const App: React.FC = () => {
                   <span className="text-stone-600 dark:text-stone-400"> · </span>
                   <span className="font-bold text-stone-900 dark:text-stone-100">{dashboardStats.today.toLocaleString()} today</span>
                   <span className="text-stone-600 dark:text-stone-400"> (</span>
-                  <span className={`font-bold ${dashboardStats.todayGrowth >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  <span className={`font-bold ${dashboardStats.todayGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
                     {formatSignedPercent(dashboardStats.todayGrowth)}
                   </span>
                   <span className="text-stone-600 dark:text-stone-400">) · </span>
@@ -318,10 +285,10 @@ const App: React.FC = () => {
         </section>
 
         {/* Dashboard Controls & Chart Zone */}
-        <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-8 pb-10">
+        <section className="w-full border-b border-stone-200 dark:border-stone-800 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-6 pb-7 sm:pt-8 sm:pb-10">
             {/* Dedicated Control Strip for Filter */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 sm:mb-8 gap-2.5 sm:gap-4">
               <h2 className="text-xl md:text-2xl font-bold text-stone-900 dark:text-stone-100 font-display flex items-center gap-2">
                 The Pulse
               </h2>
@@ -339,7 +306,7 @@ const App: React.FC = () => {
                 />
                 <div className="relative group ml-1 hidden sm:block">
                   <Info size={16} className="text-stone-400 hover:text-primary cursor-help transition-colors" />
-                  <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-sm rounded-xl shadow-soft border border-stone-100 dark:border-stone-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                  <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-background-light dark:bg-background-dark text-stone-800 dark:text-stone-200 text-sm rounded-xl shadow-soft border border-stone-200 dark:border-stone-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
                     <p className="font-semibold mb-2 border-b border-stone-100 dark:border-stone-700 pb-2">Filter Labels</p>
                     <p className="mt-2"><span className="text-primary font-medium">All Items</span> = AI Items</p>
                     <p className="mt-2"><span className="text-[#a2495c] font-medium">0 ETV</span> = $0 Tax Value</p>
@@ -361,8 +328,8 @@ const App: React.FC = () => {
         </section>
 
         {/* Heatmaps Zone - Equal grid */}
-        <section className="w-full bg-background-light dark:bg-background-dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 lg:py-14 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <section className="w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-7 sm:py-10 lg:py-14 grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 lg:gap-12">
             <Suspense fallback={<CardSkeleton height="h-72" />}>
               <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
             </Suspense>
@@ -378,9 +345,9 @@ const App: React.FC = () => {
         </section>
       </main>
 
-      <div className="w-full bg-background-light dark:bg-background-dark border-t border-stone-200 dark:border-stone-800 relative z-10">
+      <div className="w-full border-t border-stone-200 dark:border-stone-800 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <footer className="w-full pt-10 pb-8 flex flex-col items-start justify-center gap-4 text-left text-stone-500 dark:text-stone-400 text-sm font-medium">
+          <footer className="w-full pt-6 pb-5 sm:pt-10 sm:pb-8 flex flex-col items-start justify-center gap-2.5 sm:gap-4 text-left text-stone-500 dark:text-stone-400 text-sm font-medium">
             <a
               href="https://github.com/MarvNC/FreeVinesStats"
               target="_blank"
@@ -391,7 +358,7 @@ const App: React.FC = () => {
               <Github size={16} />
               <span>Source // by MarvNC</span>
             </a>
-            <p className="opacity-60 max-w-sm leading-relaxed mt-2">
+            <p className="opacity-60 max-w-sm leading-relaxed mt-1 sm:mt-2">
               Tracking data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
               <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VineHelper</a> if you enjoy this data.
             </p>

@@ -39,7 +39,7 @@ export default function ThemeToggle() {
       title="Toggle theme (System → Light → Dark)"
     >
       {getIcon()}
-      <span className="hidden sm:inline">THEME</span>
+      <span className="hidden sm:inline">Theme</span>
     </button>
   );
 }
