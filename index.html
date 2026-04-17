@@ -4,32 +4,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FreeVinesStats</title>
+  <title>Amazon Vine Charts - Free Real-Time Statistics & Analytics | FreeVinesStats</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional" rel="stylesheet" />
   <link rel="preconnect" href="https://vine-api.maarv.dev" crossorigin />
 
-  <meta name="description" content="Detailed statistics and analytics for Amazon Vine." />
+  <meta name="description" content="Free Amazon Vine charts and real-time statistics. Track daily drops, monitor item availability trends, and analyze 0 ETV, AFA, and AI item patterns with interactive charts and heatmaps." />
+  <meta name="keywords" content="amazon vine charts, amazon vine statistics, vine charts, vine analytics, vine drops, 0 ETV, AFA items, AI items, vine tracker, amazon vine data, vine free tools" />
+  <meta name="author" content="MarvNC" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+  <link rel="canonical" href="https://vine.maarv.dev/" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="FreeVinesStats" />
-  <meta property="og:description" content="Detailed statistics and analytics for Amazon Vine." />
-  <meta property="og:image" content="/icon.png" />
-  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Amazon Vine Charts - Free Real-Time Statistics & Analytics | FreeVinesStats" />
+  <meta property="og:description" content="Free Amazon Vine charts and real-time statistics. Track daily drops, monitor item availability trends, and analyze 0 ETV, AFA, and AI item patterns." />
+  <meta property="og:image" content="https://vine.maarv.dev/og-image.png" />
+  <meta property="og:url" content="https://vine.maarv.dev/" />
+  <meta property="og:site_name" content="FreeVinesStats" />
+  <meta property="og:locale" content="en_US" />
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="FreeVinesStats" />
-  <meta name="twitter:description" content="Detailed statistics and analytics for Amazon Vine." />
-  <meta name="twitter:image" content="/icon.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Amazon Vine Charts - Free Real-Time Statistics & Analytics | FreeVinesStats" />
+  <meta name="twitter:description" content="Free Amazon Vine charts and real-time statistics. Track daily drops, monitor item availability trends, and analyze 0 ETV, AFA, and AI item patterns." />
+  <meta name="twitter:image" content="https://vine.maarv.dev/og-image.png" />
+  <meta name="twitter:image:alt" content="FreeVinesStats Amazon Vine Analytics Dashboard" />
 
   <link rel="icon" href="/icon.png" />
   <link rel="apple-touch-icon" href="/icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FreeVinesStats",
+    "description": "Free Amazon Vine charts and real-time statistics. Track daily drops, monitor item availability trends, and analyze 0 ETV, AFA, and AI item patterns with interactive charts and heatmaps.",
+    "url": "https://vine.maarv.dev/",
+    "applicationCategory": "AnalyticsApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "MarvNC",
+      "url": "https://github.com/MarvNC"
+    },
+    "isAccessibleForFree": true,
+    "inLanguage": "en-US"
+  }
+  </script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
   <div id="root"></div>
+  
+  <!-- Fallback content for crawlers and users without JavaScript -->
+  <noscript>
+    <div style="max-width: 800px; margin: 0 auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; text-align: center;">
+      <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+      <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 16px; color: #0f172a;">FreeVinesStats</h1>
+      <p style="font-size: 18px; line-height: 1.6; color: #475569; margin-bottom: 24px;">
+        Free Amazon Vine charts and real-time statistics. Track daily drops, monitor item availability trends, 
+        and analyze 0 ETV, AFA, and AI item patterns with interactive charts and heatmaps.
+      </p>
+      <p style="font-size: 16px; color: #64748b;">
+        ⚠️ This application requires JavaScript to display interactive charts and statistics. 
+        Please enable JavaScript in your browser to use FreeVinesStats.
+      </p>
+      <div style="margin-top: 32px; padding: 24px; background: #f8fafc; border-radius: 12px;">
+        <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 12px; color: #0f172a;">Key Features:</h2>
+        <ul style="text-align: left; display: inline-block; color: #475569; line-height: 1.8;">
+          <li>Real-time Amazon Vine drop tracking</li>
+          <li>Interactive charts with multiple timeframes (1D, 7D, 1M, 3M, 1Y)</li>
+          <li>Weekly activity heatmaps</li>
+          <li>Hourly intensity analysis</li>
+          <li>0 ETV, AFA, and AI item filtering</li>
+        </ul>
+      </div>
+      <p style="margin-top: 32px; color: #94a3b8; font-size: 14px;">
+        Data provided by <a href="https://www.vinehelper.ovh/" style="color: #3b82f6; text-decoration: none;">VineHelper</a>. 
+        Open source on <a href="https://github.com/MarvNC/FreeVinesStats" style="color: #3b82f6; text-decoration: none;">GitHub</a>.
+      </p>
+    </div>
+  </noscript>
+
   <script type="module" src="/index.tsx"></script>
 </body>
 
