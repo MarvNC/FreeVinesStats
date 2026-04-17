@@ -144,7 +144,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark text-slate-600 dark:text-slate-400 font-sans px-4 text-center">
         <CloudOff size={48} className="text-rose-400 mb-2" />
-        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-white">Unable to Load Data</h2>
+        <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white uppercase tracking-widest">Unable to Load Data</h2>
         <p className="text-sm max-w-md">{error}</p>
         <button 
           onClick={loadData}
@@ -159,14 +159,15 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col pb-16 transition-colors duration-500 font-sans relative overflow-x-hidden">
       {/* Header Zone */}
-      <div className="w-full border-b border-slate-300 dark:border-slate-800 bg-background-light dark:bg-background-dark">
+      <div className="w-full border-b border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark relative">
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-emerald-400 to-primary/20"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2">
-                <ChartNoAxesCombined size={24} />
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-1.5 border border-slate-900 dark:border-white group hover:bg-transparent hover:text-slate-900 dark:hover:bg-transparent dark:hover:text-white transition-colors duration-300">
+                <ChartNoAxesCombined size={20} className="group-hover:scale-110 transition-transform" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-serif">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-display uppercase">
                 FreeVines<span className="text-primary">Stats</span>
               </h1>
             </div>
@@ -174,10 +175,13 @@ const App: React.FC = () => {
             <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
               {dashboardStats.updatedAt && (
                 <div className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
                   <button 
                     onClick={loadData} 
-                    className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors group"
+                    className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors group font-mono"
                     title="Refresh data (R)"
                   >
                     <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-300" />
@@ -185,12 +189,12 @@ const App: React.FC = () => {
                   </button>
                 </div>
               )}
-              <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
-              <button onClick={() => setShowShortcuts(true)} className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold">
+              <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
+              <button onClick={() => setShowShortcuts(true)} className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold font-mono">
                 <HelpCircle size={14} />
                 <span className="hidden sm:inline">Keys</span> [?]
               </button>
-              <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
+              <div className="hidden sm:block w-px h-4 bg-slate-200 dark:bg-slate-800"></div>
               <ThemeToggle />
             </div>
           </header>
@@ -198,66 +202,84 @@ const App: React.FC = () => {
       </div>
 
       <main className="w-full flex flex-col">
-        {/* Ticker Zone - Warm Tint */}
-        <section className="w-full bg-orange-50/50 dark:bg-orange-950/10 border-b border-slate-300 dark:border-slate-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 xl:py-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-            <div className="flex flex-wrap items-center gap-x-8 sm:gap-x-12 gap-y-6">
-              <StatCard 
-                title="Last Hour" 
-                value={dashboardStats.lastHour} 
-                subValue="New Items" 
-                icon={Clock}
-                iconColorClass="text-primary"
-              />
-              <div className="hidden sm:block w-px h-12 bg-slate-300 dark:bg-slate-700/50"></div>
-              <StatCard 
-                title="Today" 
-                value={dashboardStats.today} 
-                subValue={`vs Median (${dashboardStats.todayMedian})`}
-                trend={dashboardStats.todayGrowth}
-                icon={TrendingUp}
-                iconColorClass="text-emerald-500"
-              />
-              <div className="hidden sm:block w-px h-12 bg-slate-300 dark:bg-slate-700/50"></div>
-              <StatCard 
-                title="This Week" 
-                value={dashboardStats.thisWeek} 
-                subValue={`vs Median (${dashboardStats.weekMedian})`}
-                trend={dashboardStats.weekGrowth}
-                icon={Calendar}
-                iconColorClass="text-violet-500"
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Filter:</span>
-              <SegmentedControl 
-                options={[
-                  { value: 'all', label: 'All' },
-                  { value: 'zeroEtv', label: '0 ETV' },
-                  { value: 'afa', label: 'AFA' },
-                ]}
-                value={dataFilter}
-                onChange={(val) => setDataFilter(val as DataFilter)}
-                name="dataFilter"
-                variant="flat"
-              />
-              <div className="relative group ml-1 hidden sm:block">
-                <Info size={16} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help transition-colors" />
-                <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-none border border-slate-700 dark:border-slate-300 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 tracking-wide">
-                  <p className="font-bold mb-2 border-b border-slate-700 dark:border-slate-200 pb-2 uppercase text-[10px] tracking-widest">Filter Labels</p>
-                  <p className="mt-2"><span className="text-primary font-bold">ALL</span> = AI ITEMS (DEFAULT)</p>
-                  <p className="mt-2"><span className="text-rose-400 font-bold">0_ETV</span> = $0 TAX VALUE</p>
-                  <p className="mt-2"><span className="text-orange-400 font-bold">AFA</span> = AVAILABLE FOR ALL</p>
-                </div>
+        {/* Ticker Zone */}
+        <section className="w-full bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 flex flex-col xl:flex-row xl:items-stretch justify-between gap-6">
+            <div className="flex flex-col sm:flex-row flex-1 items-stretch gap-0 border border-slate-200 dark:border-slate-800">
+              <div className="flex-1 p-4 sm:p-6 sm:border-r border-b sm:border-b-0 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 relative group overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 dark:bg-primary/10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:bg-primary/20 transition-colors"></div>
+                <StatCard 
+                  title="Last Hour" 
+                  value={dashboardStats.lastHour} 
+                  subValue="New Items" 
+                  icon={Clock}
+                  iconColorClass="text-primary"
+                />
+              </div>
+              <div className="flex-1 p-4 sm:p-6 sm:border-r border-b sm:border-b-0 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 relative group overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:bg-emerald-500/20 transition-colors"></div>
+                <StatCard 
+                  title="Today" 
+                  value={dashboardStats.today} 
+                  subValue={`vs Median (${dashboardStats.todayMedian})`}
+                  trend={dashboardStats.todayGrowth}
+                  icon={TrendingUp}
+                  iconColorClass="text-emerald-500"
+                />
+              </div>
+              <div className="flex-1 p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-900/20 relative group overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 dark:bg-violet-500/10 rounded-full blur-2xl -mr-8 -mt-8 group-hover:bg-violet-500/20 transition-colors"></div>
+                <StatCard 
+                  title="This Week" 
+                  value={dashboardStats.thisWeek} 
+                  subValue={`vs Median (${dashboardStats.weekMedian})`}
+                  trend={dashboardStats.weekGrowth}
+                  icon={Calendar}
+                  iconColorClass="text-violet-500"
+                />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Pulse Chart Zone - Cool Tint */}
-        <section className="w-full bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-300 dark:border-slate-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 lg:py-14">
+        {/* Dashboard Controls & Chart Zone */}
+        <section className="w-full bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-8 pb-10">
+            {/* Dedicated Control Strip for Filter */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-6 bg-primary"></div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white font-display uppercase tracking-widest">
+                    Data Stream
+                  </h2>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 font-mono">Feed:</span>
+                <SegmentedControl 
+                  options={[
+                    { value: 'all', label: 'All' },
+                    { value: 'zeroEtv', label: '0_ETV' },
+                    { value: 'afa', label: 'AFA' },
+                  ]}
+                  value={dataFilter}
+                  onChange={(val) => setDataFilter(val as DataFilter)}
+                  name="dataFilter"
+                  variant="flat"
+                />
+                <div className="relative group ml-1 mr-2 hidden sm:block">
+                  <Info size={14} className="text-slate-400 hover:text-primary cursor-help transition-colors" />
+                  <div className="absolute top-full right-0 mt-2 w-56 p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-none border border-slate-700 dark:border-slate-300 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 tracking-wide font-mono">
+                    <p className="font-bold mb-2 border-b border-slate-700 dark:border-slate-200 pb-2 uppercase text-[10px] tracking-widest">Filter Labels</p>
+                    <p className="mt-2"><span className="text-primary font-bold">ALL</span> = AI ITEMS</p>
+                    <p className="mt-2"><span className="text-rose-400 font-bold">0_ETV</span> = $0 TAX VALUE</p>
+                    <p className="mt-2"><span className="text-orange-400 font-bold">AFA</span> = AVAIL FOR ALL</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <Suspense fallback={<CardSkeleton height="h-96" />}>
               <PulseChart 
                 data={chartData} 
@@ -269,9 +291,9 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* Heatmaps Zone - Asymmetric grid */}
+        {/* Heatmaps Zone - Equal grid */}
         <section className="w-full bg-background-light dark:bg-background-dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 lg:py-14 grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 lg:gap-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10 lg:py-14 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             <Suspense fallback={<CardSkeleton height="h-72" />}>
               <WeeklyActivity data={heatMapData.weekly} maxDaily={heatMapData.maxDaily} />
             </Suspense>

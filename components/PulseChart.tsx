@@ -45,9 +45,9 @@ interface PulseChartProps {
 }
 
 const SERIES = [
-  { key: 'zeroEtv',    label: '0_ETV', color: '#ef4444' },
-  { key: 'lastChance', label: 'AFA',   color: '#f97316' },
-  { key: 'ai',         label: 'AI',    color: '#3b82f6' },
+  { key: 'zeroEtv',    label: '0_ETV', color: '#ff006e' },
+  { key: 'lastChance', label: 'AFA',   color: '#ccff00' },
+  { key: 'ai',         label: 'AI',    color: '#00e5ff' },
 ] as const;
 
 interface TooltipState {
@@ -232,8 +232,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: '0 ETV',
           data: visibleData.map(d => ({ x: d.date, y: d.zeroEtv })),
-          backgroundColor: '#ef4444',
-          hoverBackgroundColor: '#f87171',
+          backgroundColor: '#ff006e',
+          hoverBackgroundColor: '#ff4d94',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -244,8 +244,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: 'AFA',
           data: visibleData.map(d => ({ x: d.date, y: d.lastChance })),
-          backgroundColor: '#f97316',
-          hoverBackgroundColor: '#fb923c',
+          backgroundColor: '#ccff00',
+          hoverBackgroundColor: '#d9ff33',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -256,8 +256,8 @@ const PulseChart: React.FC<PulseChartProps> = ({
         {
           label: 'AI',
           data: visibleData.map(d => ({ x: d.date, y: d.ai })),
-          backgroundColor: '#3b82f6',
-          hoverBackgroundColor: '#60a5fa',
+          backgroundColor: '#00e5ff',
+          hoverBackgroundColor: '#33ebff',
           stack: 's',
           borderRadius: 0,
           borderSkipped: false,
@@ -401,7 +401,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white font-serif flex items-center gap-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white font-display uppercase tracking-wider flex items-center gap-2">
               The Pulse
             </h2>
 
@@ -430,7 +430,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={stepBack}
               disabled={!canStepBack}
               aria-label="Previous period"
-              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-l-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-none text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
@@ -446,7 +446,7 @@ const PulseChart: React.FC<PulseChartProps> = ({
               onClick={stepForward}
               disabled={!canStepForward}
               aria-label="Next period"
-              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-r-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center h-8 w-8 border border-slate-300 dark:border-slate-700 rounded-none text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={16} />
             </button>

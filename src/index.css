@@ -43,10 +43,6 @@
 .animate-fade-in { animation: fade-in 0.2s ease-out; }
 .animate-zoom-in-95 { animation: zoom-in-95 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
 
-.font-serif {
-  font-family: 'Playfair Display', serif;
-}
-
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
