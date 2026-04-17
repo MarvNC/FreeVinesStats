@@ -22,15 +22,11 @@ const SegmentedControl = <T extends string | number>({
   variant = 'elevated',
   name,
 }: SegmentedControlProps<T>) => {
-  const containerClass = variant === 'elevated' 
-    ? 'bg-stone-100 dark:bg-stone-800/80 p-1 rounded-xl border border-stone-200 dark:border-stone-700' 
-    : 'bg-transparent gap-1';
+  const containerClass = 'bg-transparent';
 
-  const activeClass = variant === 'elevated'
-    ? 'bg-white text-stone-900 shadow-sm dark:bg-stone-700 dark:text-white rounded-lg'
-    : 'bg-stone-200 text-stone-900 dark:bg-stone-700 dark:text-white rounded-lg';
+  const activeClass = 'text-stone-900 dark:text-stone-100 border-b-2 border-primary';
 
-  const inactiveClass = 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50 rounded-lg';
+  const inactiveClass = 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/30';
 
   return (
     <div className={`${containerClass} flex items-center w-full sm:w-auto overflow-x-auto scrollbar-hide`} role="group" aria-label={name}>

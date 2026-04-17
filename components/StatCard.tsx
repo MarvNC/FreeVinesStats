@@ -49,7 +49,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <div className="flex flex-col gap-3 group relative z-10">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-sm font-medium tracking-wide">
+        <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-sm font-medium">
           <Icon size={14} className={iconColorClass} />
           <span>{title}</span>
         </div>
@@ -71,7 +71,7 @@ const StatCard: React.FC<StatCardProps> = ({
           {value.toLocaleString()}
         </div>
       </div>
-      <div className="text-xs text-stone-500 dark:text-stone-400 font-medium tracking-wide pt-3 mt-1 border-t border-stone-100 dark:border-stone-800/60">
+      <div className="text-xs text-stone-500 dark:text-stone-400 font-medium pt-3 mt-1 border-t border-stone-100 dark:border-stone-800/60">
         {subValue}
       </div>
     </div>

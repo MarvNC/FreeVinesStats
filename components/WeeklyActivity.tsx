@@ -54,7 +54,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
               const isNewMonth = startMonth !== endMonth || weekStart.date() === 1;
               const label      = startMonth !== endMonth ? weekEnd.format('MMM') : weekStart.format('MMM');
               return (
-                <div key={idx} className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-center uppercase tracking-tighter">
+                <div key={idx} className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-center tracking-tighter">
                   {isNewMonth ? label : ''}
                 </div>
               );
@@ -64,7 +64,7 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
           {/* Day rows */}
           {daysOfWeek.map((dayName, dayIndex) => (
             <div key={dayName} className="grid grid-cols-[24px_repeat(24,1fr)] gap-[2px] items-center">
-              <div className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-right pr-1.5 uppercase tracking-tighter">{dayName}</div>
+              <div className="text-[8px] text-slate-400 dark:text-slate-500 font-bold text-right pr-1.5 tracking-tighter">{dayName}</div>
               {weeks.map((weekStart, weekIndex) => {
                 const cellDate  = weekStart.add(dayIndex, 'day');
                 const dateKey   = cellDate.format('YYYY-MM-DD');
@@ -102,8 +102,8 @@ const WeeklyActivity: React.FC<WeeklyActivityProps> = ({ data, maxDaily }) => {
           className="fixed z-[100] pointer-events-none -translate-x-1/2 -translate-y-full px-3 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl text-xs font-bold whitespace-nowrap rounded-none border border-slate-700 dark:border-slate-300"
           style={{ left: hoveredCell.x, top: hoveredCell.y }}
         >
-          <div className="opacity-60 text-[10px] mb-0.5 uppercase">{hoveredCell.date}</div>
-          <div className="tabular-nums">{hoveredCell.value.toLocaleString()} <span className="font-bold opacity-60 text-[10px]">ITEMS</span></div>
+          <div className="opacity-60 text-[10px] mb-0.5">{hoveredCell.date}</div>
+          <div className="tabular-nums">{hoveredCell.value.toLocaleString()} <span className="font-bold opacity-60 text-[10px]">Items</span></div>
         </div>
       )}
     </div>

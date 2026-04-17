@@ -373,9 +373,9 @@ const PulseChart: React.FC<PulseChartProps> = ({
         style={{ left: tooltipLeft, top: tooltipTop, transform: 'translateY(-100%)' }}
       >
         <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-3 rounded-none shadow-xl border border-slate-700 dark:border-slate-300 min-w-[160px] font-mono">
-          <p className="text-[10px] font-bold opacity-60 mb-1.5 uppercase tracking-wider">{dateDisplay}</p>
+          <p className="text-[10px] font-bold opacity-60 mb-1.5">{dateDisplay}</p>
           <p className="text-base font-extrabold tabular-nums mb-2">
-            {point.total.toLocaleString()} <span className="text-xs font-normal opacity-60">TOTAL</span>
+            {point.total.toLocaleString()} <span className="text-xs font-normal opacity-60">Total</span>
           </p>
           <div className="flex flex-col gap-1.5">
             {SERIES.map(({ key, label, color }) => (

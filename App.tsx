@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, lazy, Suspense, useCallback } from 'react';
-import { Github, ChartNoAxesCombined, CloudOff, Clock, TrendingUp, Calendar, RefreshCw, HelpCircle, X, Info } from 'lucide-react';
+import { Github, CloudOff, Clock, TrendingUp, Calendar, RefreshCw, HelpCircle, X, Info } from 'lucide-react';
 import { fetchStats } from './services/api';
 import { StatsData, Timeframe, DashboardStats, ChartDataPoint, HeatMapData, Granularity, DataFilter } from './types';
 import { processStats, processChartData, processHeatMaps } from './utils/analytics';
@@ -169,13 +169,12 @@ const App: React.FC = () => {
           <header className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-stone-800 dark:text-stone-100">
-                <ChartNoAxesCombined size={24} className="text-primary" />
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-display">
                   FreeVinesStats
                 </h1>
               </div>
               <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
-                Amazon Vine drop tracking and analytics
+                Drop tracking for Vine hunters
               </p>
             </div>
 
@@ -212,9 +211,8 @@ const App: React.FC = () => {
         {/* Ticker Zone */}
         <section className="w-full bg-background-light dark:bg-background-dark border-b border-stone-200 dark:border-stone-800 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              <div className="p-5 sm:p-6 bg-white dark:bg-stone-800/50 rounded-2xl shadow-soft relative group overflow-hidden transition-all duration-300 hover:shadow-md border border-stone-100 dark:border-stone-800/80">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-primary/15 transition-colors duration-500"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800">
+              <div className="py-5 sm:py-6 sm:px-6">
                 <StatCard 
                   title="Last Hour" 
                   value={dashboardStats.lastHour} 
@@ -223,8 +221,7 @@ const App: React.FC = () => {
                   iconColorClass="text-primary"
                 />
               </div>
-              <div className="p-5 sm:p-6 bg-white dark:bg-stone-800/50 rounded-2xl shadow-soft relative group overflow-hidden transition-all duration-300 hover:shadow-md border border-stone-100 dark:border-stone-800/80">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-emerald-500/15 transition-colors duration-500"></div>
+              <div className="py-5 sm:py-6 sm:px-6">
                 <StatCard 
                   title="Today" 
                   value={dashboardStats.today} 
@@ -234,8 +231,7 @@ const App: React.FC = () => {
                   iconColorClass="text-emerald-500"
                 />
               </div>
-              <div className="p-5 sm:p-6 bg-white dark:bg-stone-800/50 rounded-2xl shadow-soft relative group overflow-hidden transition-all duration-300 hover:shadow-md border border-stone-100 dark:border-stone-800/80">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 dark:bg-violet-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-violet-500/15 transition-colors duration-500"></div>
+              <div className="py-5 sm:py-6 sm:px-6">
                 <StatCard 
                   title="This Week" 
                   value={dashboardStats.thisWeek} 
@@ -323,7 +319,7 @@ const App: React.FC = () => {
             <span>Source // by MarvNC</span>
           </a>
           <p className="opacity-60 max-w-sm leading-relaxed mt-2">
-            Data stream from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
+            Tracking data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
             <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VineHelper</a> if you enjoy this data.
           </p>
         </footer>
@@ -334,9 +330,9 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-opacity" onClick={() => setShowShortcuts(false)}>
           <div className="bg-white dark:bg-slate-900 rounded-none border-2 border-slate-900 dark:border-white w-full max-w-md overflow-hidden animate-fade-in animate-zoom-in-95 font-mono" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 sm:p-5 border-b-2 border-slate-900 dark:border-white bg-slate-100 dark:bg-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <HelpCircle size={16} className="text-primary" />
-                KEYBOARD_SHORTCUTS
+                Keyboard Shortcuts
               </h2>
               <button 
                 onClick={() => setShowShortcuts(false)}
@@ -347,25 +343,25 @@ const App: React.FC = () => {
               </button>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-[1fr_auto] gap-4 gap-y-6 text-xs font-bold uppercase tracking-wider">
-                <div className="text-slate-600 dark:text-slate-400">SET_TIMEFRAME_1D_TO_1Y</div>
+              <div className="grid grid-cols-[1fr_auto] gap-4 gap-y-6 text-xs font-bold">
+                <div className="text-slate-600 dark:text-slate-400">Set timeframe (1d to 1y)</div>
                 <div className="flex gap-1.5 justify-end font-bold tabular-nums">
                   <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">1</kbd>
                   <span className="text-slate-400 self-center">...</span>
                   <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">6</kbd>
                 </div>
 
-                <div className="text-slate-600 dark:text-slate-400">FORCE_REFRESH</div>
+                <div className="text-slate-600 dark:text-slate-400">Force refresh</div>
                 <div className="flex justify-end font-bold">
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white uppercase">R</kbd>
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">R</kbd>
                 </div>
 
-                <div className="text-slate-600 dark:text-slate-400">TOGGLE_THEME</div>
+                <div className="text-slate-600 dark:text-slate-400">Toggle theme</div>
                 <div className="flex justify-end font-bold">
-                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white uppercase">D</kbd>
+                  <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">D</kbd>
                 </div>
 
-                <div className="text-slate-600 dark:text-slate-400">TOGGLE_HELP</div>
+                <div className="text-slate-600 dark:text-slate-400">Toggle help</div>
                 <div className="flex justify-end font-bold">
                   <kbd className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-none px-2 min-w-[1.5rem] h-6 text-slate-900 dark:text-white">?</kbd>
                 </div>
@@ -374,9 +370,9 @@ const App: React.FC = () => {
             <div className="bg-slate-100 dark:bg-slate-800 p-4 border-t-2 border-slate-900 dark:border-white text-center">
               <button 
                 onClick={() => setShowShortcuts(false)}
-                className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[11px] uppercase tracking-widest transition-opacity hover:opacity-90"
+                className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[11px] transition-opacity hover:opacity-90"
               >
-                ACKNOWLEDGE
+                Acknowledge
               </button>
             </div>
           </div>
