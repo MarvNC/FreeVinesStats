@@ -327,8 +327,8 @@ const App: React.FC = () => {
               <span>Source // by MarvNC</span>
             </a>
             <p className="opacity-60 max-w-sm leading-relaxed mt-1 sm:mt-2">
-              Tracking data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VineHelper</a>.<br />
-              <a href="https://www.patreon.com/VineHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VineHelper</a> if you enjoy this data.
+              Tracking data from <a href="https://www.vinehelper.ovh/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">VHelper</a>.<br />
+              <a href="https://www.patreon.com/cw/VHelper" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Support VHelper</a> if you enjoy this data.
             </p>
           </footer>
         </div>
